@@ -1,0 +1,17 @@
+{"deviceId": "A123", "latency": 42, "packetLoss": 0.01, "timestamp": "2025-10-25T04:16:54.086935"}
+{"deviceId": "0d87de8d-8a91-4ac6-b7e2-601c1793e815", "latency": 204.89788055419922, "packetLoss": 0, "timestamp": "2025-10-25T04:20:23.710834"}
+{"deviceId": "0d87de8d-8a91-4ac6-b7e2-601c1793e815", "latency": 96.18043899536133, "packetLoss": 0, "timestamp": "2025-10-25T04:20:28.831168"}
+{"deviceId": "0d87de8d-8a91-4ac6-b7e2-601c1793e815", "latency": 23.042917251586914, "packetLoss": 0, "timestamp": "2025-10-25T04:20:33.873187"}
+{"deviceId": "0d87de8d-8a91-4ac6-b7e2-601c1793e815", "latency": 198.68087768554688, "packetLoss": 0, "timestamp": "2025-10-25T04:20:39.082201"}
+{"deviceId": "0d87de8d-8a91-4ac6-b7e2-601c1793e815", "latency": 16.52216911315918, "packetLoss": 0, "timestamp": "2025-10-25T04:20:44.117280"}
+{"deviceId": "0d87de8d-8a91-4ac6-b7e2-601c1793e815", "latency": 483.828067779541, "packetLoss": 0, "timestamp": "2025-10-25T04:20:49.615874"}
+{"deviceId": "0d87de8d-8a91-4ac6-b7e2-601c1793e815", "latency": 217.09084510803223, "packetLoss": 0, "timestamp": "2025-10-25T04:20:54.850237"}
+{"deviceId": "0d87de8d-8a91-4ac6-b7e2-601c1793e815", "latency": 334.55491065979004, "packetLoss": 0, "timestamp": "2025-10-25T04:21:00.202019"}
+{"deviceId": "0d87de8d-8a91-4ac6-b7e2-601c1793e815", "latency": 70.40905952453613, "packetLoss": 0, "timestamp": "2025-10-25T04:21:05.286512"}
+{"deviceId": "0d87de8d-8a91-4ac6-b7e2-601c1793e815", "latency": 235.25714874267578, "packetLoss": 0, "timestamp": "2025-10-25T04:21:10.533302"}
+{"deviceId": "0d87de8d-8a91-4ac6-b7e2-601c1793e815", "latency": 107.2239875793457, "packetLoss": 0, "timestamp": "2025-10-25T04:21:15.653534"}
+{"deviceId": "0d87de8d-8a91-4ac6-b7e2-601c1793e815", "latency": 77.60787010192871, "packetLoss": 0, "timestamp": "2025-10-25T04:21:20.752368"}
+{"deviceId": "0d87de8d-8a91-4ac6-b7e2-601c1793e815", "latency": 338.40203285217285, "packetLoss": 0, "timestamp": "2025-10-25T04:21:26.104420"}
+{"deviceId": "0d87de8d-8a91-4ac6-b7e2-601c1793e815", "latency": 198.63176345825195, "packetLoss": 0, "timestamp": "2025-10-25T04:21:31.311380"}
+{"deviceId": "0d87de8d-8a91-4ac6-b7e2-601c1793e815", "latency": 199.29814338684082, "packetLoss": 0, "timestamp": "2025-10-25T04:21:36.535244"}
+{"deviceId": "0d87de8d-8a91-4ac6-b7e2-601c1793e815", "latency": 210.68978309631348, "packetLoss": 0, "timestamp": "2025-10-25T04:21:41.755673"}
