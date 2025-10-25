@@ -1,4 +1,5 @@
 import json
+import os
 from datetime import datetime
 
 def collect_metrics(data):
@@ -8,5 +9,7 @@ def collect_metrics(data):
         "packetLoss": data.get("packetLoss"),
         "timestamp": datetime.utcnow().isoformat()
     }
-    with open("telemetry_log.json", "a") as f:
+    # Persist logs inside the backend folder so readers use a consistent path
+    log_path = os.path.join(os.path.dirname(__file__), "telemetry_log.json")
+    with open(log_path, "a") as f:
         f.write(json.dumps(record) + "\n")

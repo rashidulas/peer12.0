@@ -2,6 +2,10 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import LatencyChart from "@/components/LatencyChart";
+import AgentFeed from "@/components/AgentFeed";
+import LiveKitP2P from "@/components/LiveKitP2P";
+import SystemStatus from "@/components/SystemStatus";
+import NetworkMesh from "@/components/NetworkMesh";
 
 export default function Home() {
   const [data, setData] = useState<any>(null);
@@ -9,7 +13,7 @@ export default function Home() {
   const [latencyHistory, setLatencyHistory] = useState<number[]>([]);
   const [labels, setLabels] = useState<string[]>([]);
 
-  // ✅ Fetch from FastAPI backend
+  // Fetch from FastAPI backend
   const fetchData = async () => {
     try {
       console.log("API URL:", process.env.NEXT_PUBLIC_API_URL);
@@ -26,7 +30,7 @@ export default function Home() {
         new Date().toLocaleTimeString(),
       ]);
     } catch (err) {
-      console.error("❌ Error fetching data:", err);
+      console.error("Error fetching data:", err);
       setLoading(false);
     }
   };
@@ -37,7 +41,7 @@ export default function Home() {
     return () => clearInterval(interval);
   }, []);
 
-  // ✅ Network status logic
+  //  Network status logic
   const getNetworkStatus = () => {
     if (!data) return { text: "No data", color: "text-gray-500", emoji: "⚪" };
 
@@ -65,7 +69,7 @@ export default function Home() {
         }`}
       >
         <h1 className="text-3xl font-bold mb-2 text-center text-gray-800 flex items-center justify-center gap-2">
-          🌐 NetAgent Dashboard
+          NetAgent Dashboard
         </h1>
 
         {/* Network Status */}
@@ -102,6 +106,16 @@ export default function Home() {
             {/* Chart */}
             <div className="mt-6">
               <LatencyChart labels={labels} values={latencyHistory} />
+              <SystemStatus />
+
+              {/* Use EITHER NetworkMesh (visual mesh) OR LiveKitP2P (messaging focus) */}
+              {/* For demo: NetworkMesh is more impressive visually */}
+              <NetworkMesh />
+
+              {/* Alternative: Use LiveKitP2P for messaging demo */}
+              {/* <LiveKitP2P /> */}
+
+              <AgentFeed />
             </div>
 
             {/* Claude Insight */}
