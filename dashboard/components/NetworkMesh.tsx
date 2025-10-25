@@ -84,6 +84,8 @@ export default function NetworkMesh() {
         lkRoom.on(
           RoomEvent.DataReceived,
           (payload: Uint8Array, participant: any) => {
+            if (!participant || !isMounted) return;
+
             try {
               const decoder = new TextDecoder();
               const message = JSON.parse(decoder.decode(payload));
@@ -123,12 +125,19 @@ export default function NetworkMesh() {
         );
 
         lkRoom.on(RoomEvent.ParticipantDisconnected, (participant: any) => {
+          if (!participant || !isMounted) return;
+
           setPeers((prev) => {
             const updated = new Map(prev);
             updated.delete(participant.identity);
             return updated;
           });
         });
+
+        // Check if component is still mounted before connecting
+        if (!isMounted) {
+          return;
+        }
 
         await lkRoom.connect(url, token);
 

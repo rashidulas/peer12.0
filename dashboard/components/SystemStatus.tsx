@@ -84,7 +84,7 @@ export default function SystemStatus() {
       <h3 className="font-semibold mb-3 text-gray-800">
         System Status:{" "}
         <span className={getStatusColor(health.status)}>
-          {health.status.toUpperCase()}
+          {health.status?.toUpperCase() || "UNKNOWN"}
         </span>
       </h3>
 
