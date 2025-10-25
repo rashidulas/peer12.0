@@ -2,8 +2,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import LatencyChart from "@/components/LatencyChart";
-import AgentFeed from "@/components/AgentFeed";
-import LiveKitP2P from "@/components/LiveKitP2P";
 import SystemStatus from "@/components/SystemStatus";
 import NetworkMesh from "@/components/NetworkMesh";
 
@@ -107,15 +105,7 @@ export default function Home() {
             <div className="mt-6">
               <LatencyChart labels={labels} values={latencyHistory} />
               <SystemStatus />
-
-              {/* Use EITHER NetworkMesh (visual mesh) OR LiveKitP2P (messaging focus) */}
-              {/* For demo: NetworkMesh is more impressive visually */}
               <NetworkMesh />
-
-              {/* Alternative: Use LiveKitP2P for messaging demo */}
-              {/* <LiveKitP2P /> */}
-
-              <AgentFeed />
             </div>
 
             {/* Claude Insight */}

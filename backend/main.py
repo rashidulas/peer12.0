@@ -166,22 +166,6 @@ def token(identity: str = Query(...), room: str = "netagent-room"):
         logger.error(f"LiveKit token generation failed: {e}")
         return {"error": f"Token generation failed: {str(e)}"}
 
-
-# ---- Agent Feed WebSocket (simple heartbeat stream) ----
-@app.websocket("/ws/agent-feed")
-async def websocket_endpoint(websocket: WebSocket):
-    await websocket.accept()
-    logger.info("WebSocket client connected to agent-feed")
-    counter = 0
-    try:
-        while True:
-            await websocket.send_text(f"Agent heartbeat #{counter}")
-            counter += 1
-            await asyncio.sleep(2)
-    except Exception as e:
-        logger.info(f"WebSocket client disconnected: {e}")
-        pass
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],  # your Next.js URLs
