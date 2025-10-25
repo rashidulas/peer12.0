@@ -4,6 +4,8 @@ import axios from "axios";
 import LatencyChart from "@/components/LatencyChart";
 import SystemStatus from "@/components/SystemStatus";
 import NetworkMesh from "@/components/NetworkMesh";
+import SpeedTestPanel from "@/components/SpeedTestPanel";
+import AlertPanel from "@/components/AlertPanel";
 
 export default function Home() {
   const [data, setData] = useState<any>(null);
@@ -106,6 +108,8 @@ export default function Home() {
               <LatencyChart labels={labels} values={latencyHistory} />
               <SystemStatus />
               <NetworkMesh />
+              <SpeedTestPanel />
+              <AlertPanel />
             </div>
 
             {/* Claude Insight */}
@@ -116,10 +120,51 @@ export default function Home() {
               <p className="text-gray-700 leading-relaxed">
                 {data?.claude_recommendation || "No recommendation yet."}
               </p>
+
+              {/* Auto-Alert Status */}
+              {data?.alert_sent && (
+                <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm font-semibold text-red-800">
+                    Auto-Alert Sent
+                  </p>
+                  <p className="text-xs text-red-600 mt-1">
+                    {data?.alert_reason}
+                  </p>
+                </div>
+              )}
+
+              {data?.alert_suppressed && (
+                <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-sm font-semibold text-blue-800">
+                    Alert Active (cooldown)
+                  </p>
+                  <p className="text-xs text-blue-600 mt-1">
+                    {data?.alert_reason}
+                  </p>
+                  <p className="text-xs text-blue-500 mt-1">
+                    Next alert in {Math.floor(data?.cooldown_remaining / 60)}m{" "}
+                    {data?.cooldown_remaining % 60}s
+                  </p>
+                </div>
+              )}
+
+              {data?.alert_reason &&
+                !data?.alert_sent &&
+                !data?.alert_suppressed && (
+                  <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <p className="text-sm font-semibold text-yellow-800">
+                      Alert Triggered (email not configured)
+                    </p>
+                    <p className="text-xs text-yellow-600 mt-1">
+                      {data?.alert_reason}
+                    </p>
+                  </div>
+                )}
             </div>
 
             <p className="mt-6 text-sm text-gray-400 text-center">
-              Auto-refreshes every 5 seconds ⏱️
+              Auto-refreshes every 5 seconds | Cached for 30s | Alerts max once
+              per 5 minutes
             </p>
           </>
         )}

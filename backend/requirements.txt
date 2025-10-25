@@ -15,4 +15,6 @@ typing_extensions==4.15.0
 uvicorn==0.38.0
 anthropic>=0.36.0
 python-dotenv>=1.0.1
-livekit>=1.0.7
+livekit-api>=1.0.0
+composio>=0.4.0
+speedtest-cli>=2.1.3
