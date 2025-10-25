@@ -6,6 +6,7 @@ import SystemStatus from "@/components/SystemStatus";
 import NetworkMesh from "@/components/NetworkMesh";
 import SpeedTestPanel from "@/components/SpeedTestPanel";
 import AlertPanel from "@/components/AlertPanel";
+import NetworkHeatmap from "@/components/NetworkHeatmap";
 
 export default function Home() {
   const [data, setData] = useState<any>(null);
@@ -106,6 +107,7 @@ export default function Home() {
             {/* Chart */}
             <div className="mt-6">
               <LatencyChart labels={labels} values={latencyHistory} />
+              <NetworkHeatmap />
               <SystemStatus />
               <NetworkMesh />
               <SpeedTestPanel />
