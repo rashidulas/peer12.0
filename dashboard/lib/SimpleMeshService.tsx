@@ -82,12 +82,30 @@ export function SimpleMeshProvider({ children }: { children: ReactNode }) {
           // Another peer is announcing itself
           setPeers((prev) => {
             const updated = new Map(prev);
+            const isNewPeer = !prev.has(data.id);
+
             updated.set(data.id, {
               id: data.id,
               name: data.name,
               joinedAt: data.joinedAt,
               lastSeen: Date.now(),
             });
+
+            // If this is a new peer, respond with our own announcement
+            // so the new peer knows about us
+            if (isNewPeer && peer) {
+              setTimeout(() => {
+                bc.postMessage({
+                  type: "peer-announce",
+                  data: {
+                    id: peer.id,
+                    name: peer.name,
+                    joinedAt: peer.joinedAt,
+                  },
+                });
+              }, 100); // Small delay to avoid message collision
+            }
+
             return updated;
           });
           break;
