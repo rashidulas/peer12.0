@@ -14,6 +14,7 @@ export default function EdgeGlowCard({
 }) {
   const ref = React.useRef<HTMLDivElement | null>(null);
   const rafRef = React.useRef<number | null>(null);
+  const timeoutRef = React.useRef<number | null>(null);
 
   // smoothing
   const targetPos = React.useRef(0.5);
@@ -37,6 +38,17 @@ export default function EdgeGlowCard({
       rafRef.current = null;
     }
   }, []);
+
+  // Cleanup on unmount
+  React.useEffect(() => {
+    return () => {
+      if (timeoutRef.current != null) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+      stopAnimLoop();
+    };
+  }, [stopAnimLoop]);
 
   // compute clamped streak length based on card size
   const setLen = (edge: "top" | "bottom" | "left" | "right") => {
@@ -84,7 +96,7 @@ export default function EdgeGlowCard({
     const el = ref.current;
     if (!el) return;
     targetPos.current = 0.5;
-    setTimeout(() => {
+    timeoutRef.current = window.setTimeout(() => {
       el.removeAttribute("data-edge");
       if (Math.abs(currentPos.current - 0.5) < 0.002) {
         stopAnimLoop();

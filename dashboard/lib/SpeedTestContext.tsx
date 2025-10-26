@@ -31,41 +31,58 @@ export function SpeedTestProvider({ children }: { children: React.ReactNode }) {
 
   const runTest = useCallback(async (opts?: RunOpts) => {
     if (inFlightRef.current) return;          // already running
+    
+    // Set a placeholder promise immediately to block concurrent calls
+    let resolveInFlight: (() => void) | undefined;
+    inFlightRef.current = new Promise<void>((resolve) => { 
+      resolveInFlight = resolve; 
+    });
+    
     setIsRunning(true);
     setError(null);
 
+    // API base URL - falls back to localhost for development
+    // In production, NEXT_PUBLIC_API_URL environment variable should be set
     const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
     const qs = opts?.fastSeconds ? `?fastSeconds=${encodeURIComponent(opts.fastSeconds)}` : "";
-    const doRun = async () => {
-      try {
-        const res = await fetch(`${apiBase}/actions/speedtest${qs}`, { method: "POST" });
-        const data = await res.json();
-        if (!res.ok || data?.error) {
+    
+    try {
+      const res = await fetch(`${apiBase}/actions/speedtest${qs}`, { method: "POST" });
+      
+      if (!res.ok) {
+        const contentType = res.headers.get("content-type");
+        if (contentType?.includes("application/json")) {
+          const data = await res.json();
           throw new Error(data?.error || res.statusText || "Speed test failed");
         }
-        const normalized = {
-          download_mbps:
-            data.download_mbps ?? data.downloadMbps ?? data.download ?? data.down ?? null,
-          upload_mbps:
-            data.upload_mbps ?? data.uploadMbps ?? data.upload ?? data.up ?? null,
-          ping_ms:
-            data.ping_ms ?? data.pingMs ?? data.ping ?? data.latency_ms ?? data.latency ?? null,
-          server: data.server ?? null,
-          timestamp: data.timestamp ?? new Date().toISOString(),
-        } as SpeedTestResult;
-        setResult(normalized);
-      } catch (e: any) {
-        setError(e?.message || "Speed test failed");
-        // keep last good result; do not clear it
-      } finally {
-        setIsRunning(false);
-        inFlightRef.current = null;
+        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
       }
-    };
-
-    const p = doRun();
-    inFlightRef.current = p;
-    await p;
+      
+      const data = await res.json();
+      if (data?.error) {
+        throw new Error(data.error || "Speed test failed");
+      }
+      const normalized = {
+        download_mbps:
+          data.download_mbps ?? data.downloadMbps ?? data.download ?? data.down ?? null,
+        upload_mbps:
+          data.upload_mbps ?? data.uploadMbps ?? data.upload ?? data.up ?? null,
+        ping_ms:
+          data.ping_ms ?? data.pingMs ?? data.ping ?? data.latency_ms ?? data.latency ?? null,
+        server: data.server ?? null,
+        timestamp: data.timestamp ?? new Date().toISOString(),
+      } as SpeedTestResult;
+      setResult(normalized);
+    } catch (e: any) {
+      setError(e?.message || "Speed test failed");
+      // keep last good result; do not clear it
+    } finally {
+      setIsRunning(false);
+      inFlightRef.current = null;
+      if (resolveInFlight) {
+        resolveInFlight();
+      }
+    }
   }, []);
 
   const value: SpeedTestCtx = {
