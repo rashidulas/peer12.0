@@ -32,8 +32,8 @@ export default function AlertPanel() {
   };
 
   return (
-    <div className="mt-6 p-4 border rounded-xl bg-white">
-      <h3 className="font-semibold text-gray-800 mb-3">Send Email Alert</h3>
+    <div className="mt-6 p-4 border rounded-xl bg-background">
+      <h3 className="font-semibold text-foreground mb-3">Send Email Alert</h3>
 
       <div className="space-y-3">
         <textarea

@@ -94,8 +94,8 @@ export default function LatencyChart({ labels, values }: Props) {
       const tooltipColor = statusConfig[tooltipStatus].chartColor;
 
       return (
-        <div className="bg-white/95 backdrop-blur-md border-2 shadow-xl rounded-xl p-4">
-          <p className="text-xs text-gray-500 mb-1">
+        <div className="bg-background/95 backdrop-blur-md border-2 border-border shadow-xl rounded-xl p-4">
+          <p className="text-xs text-muted-foreground mb-1">
             {payload[0].payload.name}
           </p>
           <p className="text-2xl font-bold" style={{ color: tooltipColor }}>
@@ -109,13 +109,13 @@ export default function LatencyChart({ labels, values }: Props) {
   };
 
   return (
-    <div className="w-full bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+    <div className="w-full bg-background rounded-xl shadow-sm border border-border p-6">
       <div className="flex items-start justify-between mb-6">
         <div className="space-y-1">
           <div className="flex items-center gap-3">
-            <div className="text-4xl font-bold text-gray-900">
+            <div className="text-4xl font-bold text-foreground">
               {hasData ? currentLatency.toFixed(1) : "--"}
-              <span className="text-lg text-gray-500 ml-1">ms</span>
+              <span className="text-lg text-muted-foreground ml-1">ms</span>
             </div>
             {hasData && trend === "up" && (
               <span className="inline-flex items-center gap-1 px-2 py-1 bg-red-100 text-red-700 rounded-md text-sm font-medium">
@@ -130,29 +130,19 @@ export default function LatencyChart({ labels, values }: Props) {
               </span>
             )}
           </div>
-          <p className="text-sm text-gray-500">Current latency</p>
+          <p className="text-sm text-muted-foreground">Current latency</p>
         </div>
 
-        <div
-          className={`px-4 py-3 rounded-lg border ${currentStatus.bgColor
-            .replace("bg-", "bg-")
-            .replace("-500", "-50")} border-${currentStatus.bgColor
-            .replace("bg-", "")
-            .replace("-500", "-200")}`}
-        >
+        <div className="px-4 py-3 rounded-lg border bg-muted/50 border-border">
           <div className="flex items-center gap-2 mb-2">
             <div
               className={`w-2 h-2 ${currentStatus.bgColor} rounded-full`}
             ></div>
-            <span
-              className={`font-semibold ${currentStatus.bgColor
-                .replace("bg-", "text-")
-                .replace("-500", "-700")}`}
-            >
+            <span className="font-semibold text-foreground">
               {currentStatus.label}
             </span>
           </div>
-          <div className="space-y-1 text-xs text-gray-600">
+          <div className="space-y-1 text-xs text-muted-foreground">
             {hasData && (
               <>
                 <div className="flex justify-between gap-4">

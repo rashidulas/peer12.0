@@ -1,7 +1,7 @@
 "use client";
 import { useSpeedTest } from "@/lib/SpeedTestContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowDownRight, ArrowUpRight, Timer } from "lucide-react";
+import { ArrowDownToLine, ArrowUpToLine, Timer } from "lucide-react";
 import EdgeGlowCard from "@/components/edge-glow-card";
 
 // format download/upload into mbps/kbps with unit appended
@@ -55,13 +55,13 @@ export default function SpeedResultCards() {
       title: "Download speed",
       value: formatBitrate(result?.download_mbps ?? null),
       helper: isRunning ? "Measuring…" : "Measured via latest test",
-      icon: <ArrowDownRight className="h-4 w-4" />,
+      icon: <ArrowDownToLine className="h-4 w-4" />,
     },
     {
       title: "Upload speed",
       value: formatBitrate(result?.upload_mbps ?? null),
       helper: isRunning ? "Measuring…" : "Measured via latest test",
-      icon: <ArrowUpRight className="h-4 w-4" />,
+      icon: <ArrowUpToLine className="h-4 w-4" />,
     },
     {
       title: "Ping",

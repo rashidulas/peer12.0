@@ -335,37 +335,37 @@ export default function VenueHeatmap() {
         </div>
       </div>
 
-      <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-xs text-gray-600">
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-xs text-muted-foreground">
         <div className="flex flex-wrap items-center gap-3">
-          <span className="inline-flex items-center gap-1">
+          <span className="inline-flex items-center gap-1 text-foreground">
             <span
               className="inline-block h-2 w-2 rounded-full"
               style={{ background: "#22c55e" }}
             ></span>{" "}
             Excellent
           </span>
-          <span className="inline-flex items-center gap-1">
+          <span className="inline-flex items-center gap-1 text-foreground">
             <span
               className="inline-block h-2 w-2 rounded-full"
               style={{ background: "#84cc16" }}
             ></span>{" "}
             Good
           </span>
-          <span className="inline-flex items-center gap-1">
+          <span className="inline-flex items-center gap-1 text-foreground">
             <span
               className="inline-block h-2 w-2 rounded-full"
               style={{ background: "#eab308" }}
             ></span>{" "}
             Fair
           </span>
-          <span className="inline-flex items-center gap-1">
+          <span className="inline-flex items-center gap-1 text-foreground">
             <span
               className="inline-block h-2 w-2 rounded-full"
               style={{ background: "#f97316" }}
             ></span>{" "}
             Degraded
           </span>
-          <span className="inline-flex items-center gap-1">
+          <span className="inline-flex items-center gap-1 text-foreground">
             <span
               className="inline-block h-2 w-2 rounded-full"
               style={{ background: "#ef4444" }}
@@ -373,7 +373,7 @@ export default function VenueHeatmap() {
             Critical
           </span>
         </div>
-        <div className="flex items-center gap-2 text-gray-500">
+        <div className="flex items-center gap-2 text-muted-foreground">
           <div className="flex items-center gap-1">
             <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></div>
             <span>Live</span>

@@ -80,8 +80,8 @@ export default function SystemStatus() {
   }
 
   return (
-    <div className="mt-6 p-4 border rounded-xl bg-white">
-      <h3 className="font-semibold mb-3 text-gray-800">
+    <div className="mt-6 p-4 border rounded-xl bg-background">
+      <h3 className="font-semibold mb-3 text-foreground">
         System Status:{" "}
         <span className={getStatusColor(health.status)}>
           {health.status?.toUpperCase() || "UNKNOWN"}
@@ -92,7 +92,7 @@ export default function SystemStatus() {
         {/* LiveKit */}
         {health.services.livekit && (
           <div className="flex items-center justify-between">
-            <span className="text-gray-700">
+            <span className="text-foreground">
               {getStatusEmoji(health.services.livekit.status)} LiveKit
             </span>
             <span className={getStatusColor(health.services.livekit.status)}>
@@ -108,7 +108,7 @@ export default function SystemStatus() {
         {/* Anthropic */}
         {health.services.anthropic && (
           <div className="flex items-center justify-between">
-            <span className="text-gray-700">
+            <span className="text-foreground">
               {getStatusEmoji(health.services.anthropic.status)} Claude AI
             </span>
             <span className={getStatusColor(health.services.anthropic.status)}>
@@ -122,7 +122,7 @@ export default function SystemStatus() {
         {/* Telemetry */}
         {health.services.telemetry && (
           <div className="flex items-center justify-between">
-            <span className="text-gray-700">
+            <span className="text-foreground">
               {getStatusEmoji(health.services.telemetry.status)} Telemetry
             </span>
             <span className={getStatusColor(health.services.telemetry.status)}>

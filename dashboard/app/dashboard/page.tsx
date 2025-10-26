@@ -13,7 +13,7 @@ import { LiveKitProvider } from "@/lib/LiveKitService";
 import { SpeedTestProvider, useSpeedTest } from "@/lib/SpeedTestContext";
 import VenueHeatmap from "@/components/VenueHeatmap";
 import EdgeGlowCard from "@/components/edge-glow-card";
-import { ArrowDownRight, ArrowUpRight, Timer } from "lucide-react";
+import { ArrowDownToLine, ArrowUpToLine, Timer } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 /* HEALTH (unchanged) */
@@ -55,8 +55,8 @@ function ToolsSection() {
   const { result, isRunning } = useSpeedTest();
   const items = useMemo(
     () => [
-      { title: "Download speed", value: formatBitrate(result?.download_mbps ?? null), helper: isRunning ? "Measuring…" : "Measured via latest test", icon: <ArrowDownRight className="h-4 w-4" /> },
-      { title: "Upload speed",   value: formatBitrate(result?.upload_mbps ?? null),   helper: isRunning ? "Measuring…" : "Measured via latest test", icon: <ArrowUpRight className="h-4 w-4" /> },
+      { title: "Download speed", value: formatBitrate(result?.download_mbps ?? null), helper: isRunning ? "Measuring…" : "Measured via latest test", icon: <ArrowDownToLine className="h-4 w-4" /> },
+      { title: "Upload speed",   value: formatBitrate(result?.upload_mbps ?? null),   helper: isRunning ? "Measuring…" : "Measured via latest test", icon: <ArrowUpToLine className="h-4 w-4" /> },
       { title: "Ping",           value: formatPing(result?.ping_ms ?? null),          helper: isRunning ? "Measuring…" : "Measured via latest test", icon: <Timer className="h-4 w-4" /> },
     ],
     [result, isRunning]

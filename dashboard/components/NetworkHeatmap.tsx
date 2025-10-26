@@ -148,14 +148,14 @@ export default function NetworkHeatmap() {
               : "Critical";
           const color =
             threshold === 80
-              ? "bg-green-100 text-green-700 border-green-200"
+              ? "bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800"
               : threshold === 60
-              ? "bg-lime-100 text-lime-700 border-lime-200"
+              ? "bg-lime-100 dark:bg-lime-900/20 text-lime-700 dark:text-lime-400 border-lime-200 dark:border-lime-800"
               : threshold === 40
-              ? "bg-yellow-100 text-yellow-700 border-yellow-200"
+              ? "bg-yellow-100 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800"
               : threshold === 20
-              ? "bg-orange-100 text-orange-700 border-orange-200"
-              : "bg-red-100 text-red-700 border-red-200";
+              ? "bg-orange-100 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400 border-orange-200 dark:border-orange-800"
+              : "bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800";
           const count = zones.filter((z) =>
             threshold === -1
               ? z.health_score < 20
@@ -175,7 +175,7 @@ export default function NetworkHeatmap() {
       </div>
 
       {zones.length === 0 ? (
-        <div className="text-center py-8 text-gray-500">
+        <div className="text-center py-8 text-muted-foreground">
           No network data yet. Start collecting telemetry to see the heatmap.
         </div>
       ) : (
