@@ -8,6 +8,11 @@
 
 > **Enterprise-grade network monitoring with AI-powered analysis, real-time P2P mesh networking, and automated incident response workflows.**
 
+# FetchAI agent
+@insight-engine-agent
+@insight-engine-agent
+@peer-orchestrator-agent
+
 ## 🎯 Overview
 
 Peer 12.0 is a sophisticated real-time network monitoring and incident response system designed for large venues, hackathons, conferences, and enterprise environments. It combines AI-powered analysis, P2P mesh networking, vector-based clustering, and automated multi-channel incident response.
