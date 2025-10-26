@@ -233,44 +233,35 @@ def predict():
             time_since_last_alert = current_time - alert_state["last_alert_time"]
             
             if time_since_last_alert >= alert_state["cooldown"]:
-                # Send alert
+                # Trigger full incident response workflow (Email → Jira → Slack)
                 try:
                     logger.warning(f"Auto-alert triggered: {alert_reason} (last alert: {int(time_since_last_alert)}s ago)")
-                    composio_client = Composio(api_key=COMPOSIO_API_KEY)
                     
-                    alert_body = f"""NetAgent Auto-Alert
-
-Network Issue Detected:
-{alert_reason}
-
-Current Metrics:
-- Average Latency: {avg_latency:.1f}ms
-- Average Packet Loss: {avg_loss*100:.1f}%
-
-AI Recommendation:
-{insight.get('claude_recommendation', 'N/A')}
-
-Timestamp: {dt.datetime.utcnow().isoformat()}Z
-"""
+                    # Import the incident response function
+                    from backend.ai_agent import trigger_incident_response
                     
-                    result = composio_client.tools.execute(
-                        slug="GMAIL_SEND_EMAIL",
-                        arguments={
-                            "recipient_email": ALERT_EMAIL_TO,
-                            "subject": f"NetAgent Auto-Alert: {alert_reason.split(':')[0]}",
-                            "body": alert_body,
-                        },
-                        user_id=COMPOSIO_ENTITY_ID,
-                        dangerously_skip_version_check=True
-                    )
+                    # Prepare telemetry data for incident response
+                    telemetry_data = {
+                        "avg_latency_ms": avg_latency,
+                        "avg_packet_loss": avg_loss * 100,
+                        "deviceId": data.get('deviceId', 'unknown'),
+                        "location": data.get('location', 'N/A'),
+                        "timestamp": data.get('timestamp', dt.datetime.utcnow().isoformat() + 'Z'),
+                        "claude_recommendation": insight.get('claude_recommendation', 'N/A')
+                    }
                     
-                    logger.info(f"Auto-alert email sent to {ALERT_EMAIL_TO}")
+                    # Execute multi-step incident response
+                    response_result = trigger_incident_response(alert_reason, telemetry_data)
+                    
+                    logger.info(f"Incident response completed: {response_result.get('summary', {}).get('message', 'N/A')}")
                     alert_state["last_alert_time"] = current_time
                     alert_state["is_alerting"] = True
                     insight['alert_sent'] = True
                     insight['alert_reason'] = alert_reason
+                    insight['incident_response'] = response_result
+                    
                 except Exception as e:
-                    logger.error(f"Auto-alert email failed: {e}")
+                    logger.error(f"Incident response workflow failed: {e}")
                     insight['alert_sent'] = False
                     insight['alert_error'] = str(e)
             else:
@@ -385,7 +376,10 @@ def save_logs():
 
 @app.post("/actions/send-alert")
 def send_alert(message: str = Query("Network degradation detected")):
-    """Send email alert via Gmail using Composio."""
+    """
+    Trigger full incident response workflow: Email → Jira → Slack
+    This will send an email, create a Jira ticket, and post to Slack.
+    """
     if Composio is None or not COMPOSIO_API_KEY:
         return {"error": "Composio not configured"}
     
@@ -393,31 +387,32 @@ def send_alert(message: str = Query("Network degradation detected")):
         return {"error": "ALERT_EMAIL_TO not set in .env"}
     
     try:
-        # Initialize Composio client
-        composio_client = Composio(api_key=COMPOSIO_API_KEY)
+        # Import the incident response function
+        from backend.ai_agent import trigger_incident_response
         
-        # Execute Gmail send email action with entity (user) context
-        result = composio_client.tools.execute(
-            slug="GMAIL_SEND_EMAIL",
-            arguments={
-                "recipient_email": ALERT_EMAIL_TO,
-                "subject": "NetAgent Alert: Network Issue Detected",
-                "body": f"NetAgent has detected a network issue:\n\n{message}\n\nTimestamp: {dt.datetime.utcnow().isoformat()}Z",
-            },
-            user_id=COMPOSIO_ENTITY_ID,
-            dangerously_skip_version_check=True
-        )
+        # Prepare telemetry data for incident response
+        telemetry_data = {
+            "avg_latency_ms": 250,
+            "avg_packet_loss": 5.0,
+            "deviceId": "manual-trigger",
+            "location": "Manual Test",
+            "timestamp": dt.datetime.utcnow().isoformat() + 'Z',
+            "claude_recommendation": "Manual alert triggered for testing"
+        }
         
-        logger.info(f"Gmail alert sent to {ALERT_EMAIL_TO}: {message}")
+        # Execute multi-step incident response
+        response_result = trigger_incident_response(message, telemetry_data)
+        
+        logger.info(f"Manual incident response completed: {response_result.get('summary', {}).get('message', 'N/A')}")
+        
         return {
-            "status": "sent",
             "action": "send_alert",
-            "message": message,
-            "to": ALERT_EMAIL_TO,
-            "result": str(result)
+            "status": "success",
+            "workflow": "Email → Jira → Slack",
+            "result": response_result
         }
     except Exception as e:
-        logger.error(f"Gmail alert failed: {e}")
+        logger.error(f"Manual incident response failed: {e}")
         import traceback
         return {"error": str(e), "traceback": traceback.format_exc()}
 
