@@ -391,5 +391,3 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - **FastAPI** - Python web framework
 
 ---
-
-**Built with ❤️ for network monitoring and incident response**
