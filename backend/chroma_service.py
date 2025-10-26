@@ -12,18 +12,54 @@ import datetime as dt
 logger = logging.getLogger("NetAgent")
 
 class NetworkHealthStore:
-    def __init__(self, persist_directory: str = "./chroma_data"):
+    def __init__(self, persist_directory: str = "./chroma_data", use_cloud: bool = False):
         """Initialize Chroma client and collection"""
         try:
-            # Use PersistentClient for data persistence across restarts
-            self.client = chromadb.PersistentClient(path=persist_directory)
+            if use_cloud:
+                # Use Chroma Cloud
+                import os
+                chroma_api_key = os.getenv("CHROMA_API_KEY")
+                chroma_host = os.getenv("CHROMA_HOST", "https://api.trychroma.com")
+                
+                if not chroma_api_key:
+                    logger.warning("CHROMA_API_KEY not found, falling back to local")
+                    self.client = chromadb.PersistentClient(path=persist_directory)
+                else:
+                    # Use Chroma Cloud with proper authentication
+                    try:
+                        # Set required environment variables for Chroma Cloud
+                        import os
+                        os.environ["CHROMA_API_KEY"] = chroma_api_key
+                        os.environ["CHROMA_CLIENT_TYPE"] = "cloud"
+                        os.environ["CHROMA_TENANT"] = "atiqur_ar_9575"  # Your tenant ID from dashboard
+                        os.environ["CHROMA_DATABASE"] = "peer-12.0"  # Database name from your dashboard
+                        
+                        # Use the simple HttpClient for Chroma Cloud
+                        self.client = chromadb.HttpClient(
+                            host=chroma_host,
+                            port=443,
+                            settings=chromadb.Settings(
+                                chroma_api_impl="chromadb.api.fastapi.FastAPI",
+                                chroma_server_host=chroma_host,
+                                chroma_server_http_port=443,
+                                chroma_server_ssl_enabled=True
+                            )
+                        )
+                        logger.info(f"Connected to Chroma Cloud at {chroma_host}:443")
+                    except Exception as cloud_error:
+                        logger.warning(f"Chroma Cloud connection failed: {cloud_error}, falling back to local")
+                        self.client = chromadb.PersistentClient(path=persist_directory)
+            else:
+                # Use local PersistentClient
+                self.client = chromadb.PersistentClient(path=persist_directory)
             
             # Get or create collection for network health
             self.collection = self.client.get_or_create_collection(
                 name="network_health",
                 metadata={"description": "Network telemetry embeddings for zone clustering"}
             )
-            logger.info(f"Chroma initialized: {self.collection.count()} existing records")
+            count = self.collection.count() if callable(self.collection.count) else self.collection.count
+            logger.info(f"Chroma initialized: {count} existing records")
         except Exception as e:
             logger.error(f"Failed to initialize Chroma: {e}")
             self.client = None
@@ -81,7 +117,7 @@ class NetworkHealthStore:
             return []
         
         try:
-            count = self.collection.count()
+            count = self.collection.count() if callable(self.collection.count) else self.collection.count
             if count == 0:
                 return []
             
@@ -128,7 +164,10 @@ class NetworkHealthStore:
                     "health_score": float(metadata.get("health_score", 100)),
                     "timestamp": metadata.get("timestamp", ""),
                     "embedding": embedding,
-                    "color": self._get_health_color(float(metadata.get("health_score", 100)))
+                    "color": self._get_health_color(float(metadata.get("health_score", 100))),
+                    "location": metadata.get("location"),
+                    "ssid": metadata.get("ssid"),
+                    "bssid": metadata.get("bssid")
                 })
             
             logger.info(f"Returning {len(zones)} health zones from Chroma")
@@ -208,7 +247,7 @@ class NetworkHealthStore:
             return {"status": "disabled", "count": 0}
         
         try:
-            count = self.collection.count()
+            count = self.collection.count() if callable(self.collection.count) else self.collection.count
             return {
                 "status": "active",
                 "count": count,
@@ -219,6 +258,6 @@ class NetworkHealthStore:
             return {"status": "error", "error": str(e)}
 
 
-# Global instance
-chroma_store = NetworkHealthStore()
+# Global instance - set use_cloud=True to use Chroma Cloud
+chroma_store = NetworkHealthStore(use_cloud=True)
 

@@ -174,7 +174,17 @@ def post_telemetry(data: dict):
             device_id = data.get('deviceId', data.get('agent', 'unknown'))
             latency = data.get('latency', 0)
             packet_loss = data.get('packetLoss', data.get('packet_loss', 0))
-            chroma_store.add_telemetry(device_id, latency, packet_loss)
+            
+            # Extract metadata for location and network info
+            metadata = {}
+            if 'location' in data:
+                metadata['location'] = data['location']
+            if 'ssid' in data:
+                metadata['ssid'] = data['ssid']
+            if 'bssid' in data:
+                metadata['bssid'] = data['bssid']
+            
+            chroma_store.add_telemetry(device_id, latency, packet_loss, metadata)
         
         logger.debug(f"Telemetry received: {data.get('agent', 'unknown')} - {data.get('latency')}ms")
         return {"status": "Telemetry received", "data": data}

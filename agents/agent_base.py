@@ -6,12 +6,15 @@ import requests
 from ping3 import ping
 
 class NetAgent:
-    def __init__(self, name, api_url="http://127.0.0.1:8000/telemetry", peers=None):
+    def __init__(self, name, api_url="http://127.0.0.1:8000/telemetry", peers=None, location=None, ssid=None, bssid=None):
         self.name = name
         self.device_id = str(uuid.uuid4())
         self.api_url = api_url
         self.peers = peers or []
         self.running = True
+        self.location = location
+        self.ssid = ssid
+        self.bssid = bssid
 
     def measure_network(self, target="8.8.8.8"):
         latency = ping(target, unit="ms")
@@ -25,6 +28,13 @@ class NetAgent:
 
     def send_telemetry(self):
         data = self.measure_network()
+        # Add metadata for location and network info
+        if self.location:
+            data["location"] = self.location
+        if self.ssid:
+            data["ssid"] = self.ssid
+        if self.bssid:
+            data["bssid"] = self.bssid
         try:
             requests.post(self.api_url, json=data)
             print(f"[{self.name}] Sent telemetry → {data}")

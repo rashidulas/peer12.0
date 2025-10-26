@@ -13,6 +13,7 @@ import { P2PMetricsProvider, useP2PMetrics } from "@/lib/P2PMetricsContext";
 import { LiveKitProvider } from "@/lib/LiveKitService";
 import { SpeedTestProvider } from "@/lib/SpeedTestContext";
 import SpeedResultCards from "@/components/SpeedResultCards";
+import VenueHeatmap from "@/components/VenueHeatmap";
 
 import { useState } from "react";
 
@@ -27,12 +28,18 @@ function HomeSection() {
       </div>
 
       <section className="px-4 lg:px-6 grid gap-6">
-        <Card>
+        {/* <Card>
           <CardHeader>
             <CardTitle>Network Health Heatmap</CardTitle>
           </CardHeader>
+          <CardContent><NetworkHeatmap /></CardContent>
+        </Card> */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Venue Floorplan (Wi‑Fi Signal Overlay)</CardTitle>
+          </CardHeader>
           <CardContent>
-            <NetworkHeatmap />
+            <VenueHeatmap />
           </CardContent>
         </Card>
         <Card>
@@ -92,7 +99,11 @@ function DashboardContent() {
         } as React.CSSProperties
       }
     >
-      <AppSidebar variant="inset" activeView={activeView} onViewChange={setActiveView} />
+      <AppSidebar
+        variant="inset"
+        activeView={activeView}
+        onViewChange={setActiveView}
+      />
       <SidebarInset>
         <SiteHeader />
         <div className="flex flex-1 flex-col">
