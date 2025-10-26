@@ -45,12 +45,12 @@ export default function LatencyChart({ labels, values }: Props) {
       ? "down"
       : "stable";
 
-  const status =
-    currentLatency >= 300
+  const statusFromAvg =
+    avgLatency >= 300
       ? "critical"
-      : currentLatency >= 150
+      : avgLatency >= 150
       ? "warning"
-      : currentLatency >= 100
+      : avgLatency >= 100
       ? "fair"
       : "excellent";
 
@@ -77,29 +77,22 @@ export default function LatencyChart({ labels, values }: Props) {
     },
   };
 
-  const currentStatus = statusConfig[status];
+  const currentStatus = statusConfig[statusFromAvg];
 
   // Custom tooltip
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
-      const value = payload[0].value;
-      const tooltipStatus =
-        value >= 300
-          ? "critical"
-          : value >= 150
-          ? "warning"
-          : value >= 100
-          ? "fair"
-          : "excellent";
-      const tooltipColor = statusConfig[tooltipStatus].chartColor;
-
+      const value = payload[0].value as number;
       return (
         <div className="bg-white/95 backdrop-blur-md border-2 shadow-xl rounded-xl p-4">
           <p className="text-xs text-gray-500 mb-1">
             {payload[0].payload.name}
           </p>
-          <p className="text-2xl font-bold" style={{ color: tooltipColor }}>
-            {value.toFixed(1)}
+          <p
+            className="text-2xl font-bold"
+            style={{ color: currentStatus.chartColor }}
+          >
+            {value?.toFixed?.(1)}
             <span className="text-sm ml-1">ms</span>
           </p>
         </div>
@@ -111,28 +104,58 @@ export default function LatencyChart({ labels, values }: Props) {
   return (
     <div className="w-full bg-white rounded-xl shadow-sm border border-gray-200 p-6">
       <div className="flex items-start justify-between mb-6">
-        <div className="space-y-1">
+        {/* Left: Average (big), Current (below), then Min/Max row */}
+        <div className="space-y-2">
+          {/* Average latency (TOP-LEFT big) */}
           <div className="flex items-center gap-3">
             <div className="text-4xl font-bold text-gray-900">
-              {hasData ? currentLatency.toFixed(1) : "--"}
+              {hasData ? avgLatency.toFixed(1) : "--"}
               <span className="text-lg text-gray-500 ml-1">ms</span>
             </div>
+          </div>
+          <p className="text-sm text-gray-500">Average latency</p>
+
+          {/* Current latency + trend (SECOND ROW) */}
+          <div className="flex items-center gap-3">
+            <div className="text-xl font-semibold text-gray-900">
+              {hasData ? currentLatency.toFixed(1) : "--"}
+              <span className="text-sm text-gray-500 ml-1">ms</span>
+            </div>
             {hasData && trend === "up" && (
-              <span className="inline-flex items-center gap-1 px-2 py-1 bg-red-100 text-red-700 rounded-md text-sm font-medium">
+              <span className="inline-flex items-center gap-1 px-2 py-1 bg-red-100 text-red-700 rounded-md text-xs font-medium">
                 <TrendingUp className="w-3 h-3" />+
                 {(currentLatency - previousLatency).toFixed(1)}ms
               </span>
             )}
             {hasData && trend === "down" && (
-              <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-md text-sm font-medium">
+              <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-md text-xs font-medium">
                 <TrendingDown className="w-3 h-3" />-
                 {(previousLatency - currentLatency).toFixed(1)}ms
               </span>
             )}
           </div>
-          <p className="text-sm text-gray-500">Current latency</p>
+          <p className="text-xs text-gray-500 -mt-1">Current</p>
+
+          {/* Min / Max (THIRD ROW): left = Min, right = Max */}
+          {hasData && (
+            <div className="mt-2 grid grid-cols-2 gap-6 text-sm">
+              <div className="flex items-center justify-start gap-2">
+                <span className="text-gray-500">Min</span>
+                <span className="font-medium text-green-600">
+                  {minLatency.toFixed(1)}ms
+                </span>
+              </div>
+              <div className="flex items-center justify-end gap-2">
+                <span className="text-gray-500">Max</span>
+                <span className="font-medium text-red-600">
+                  {maxLatency.toFixed(1)}ms
+                </span>
+              </div>
+            </div>
+          )}
         </div>
 
+        {/* Right: Status pill only (driven by AVERAGE) */}
         <div
           className={`px-4 py-3 rounded-lg border ${currentStatus.bgColor
             .replace("bg-", "bg-")
@@ -140,7 +163,7 @@ export default function LatencyChart({ labels, values }: Props) {
             .replace("bg-", "")
             .replace("-500", "-200")}`}
         >
-          <div className="flex items-center gap-2 mb-2">
+          <div className="flex items-center gap-2">
             <div
               className={`w-2 h-2 ${currentStatus.bgColor} rounded-full`}
             ></div>
@@ -151,28 +174,6 @@ export default function LatencyChart({ labels, values }: Props) {
             >
               {currentStatus.label}
             </span>
-          </div>
-          <div className="space-y-1 text-xs text-gray-600">
-            {hasData && (
-              <>
-                <div className="flex justify-between gap-4">
-                  <span>Avg:</span>
-                  <span className="font-medium">{avgLatency.toFixed(1)}ms</span>
-                </div>
-                <div className="flex justify-between gap-4">
-                  <span>Min:</span>
-                  <span className="font-medium text-green-600">
-                    {minLatency.toFixed(1)}ms
-                  </span>
-                </div>
-                <div className="flex justify-between gap-4">
-                  <span>Max:</span>
-                  <span className="font-medium text-red-600">
-                    {maxLatency.toFixed(1)}ms
-                  </span>
-                </div>
-              </>
-            )}
           </div>
         </div>
       </div>
