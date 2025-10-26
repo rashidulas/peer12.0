@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple P2P Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+        .status {
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 8px;
+            font-weight: bold;
+            text-align: center;
+        }
+        .connected { background: #d4edda; color: #155724; }
+        .disconnected { background: #f8d7da; color: #721c24; }
+        .connecting { background: #fff3cd; color: #856404; }
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            border: none;
+            border-radius: 5px;
+            background: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover { background: #0056b3; }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 15px 0;
+            height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        input {
+            padding: 8px;
+            margin: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 200px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔗 Simple P2P Connection Test</h1>
+    
+    <div id="status" class="status disconnected">Disconnected</div>
+    
+    <div>
+        <button onclick="connect()">Connect to Signaling Server</button>
+        <button onclick="disconnect()">Disconnect</button>
+    </div>
+    
+    <div>
+        <input type="text" id="messageInput" placeholder="Type message..." disabled>
+        <button id="sendBtn" onclick="sendMessage()" disabled>Send Message</button>
+    </div>
+    
+    <div class="log" id="log"></div>
+
+    <script>
+        let socket = null;
+        let peerConnection = null;
+        let dataChannel = null;
+        let peerId = `peer-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        let pendingIceCandidates = [];
+        
+        function log(message) {
+            const logEl = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            logEl.innerHTML += `[${timestamp}] ${message}\n`;
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+        
+        function updateStatus(status, message) {
+            const statusEl = document.getElementById('status');
+            statusEl.className = `status ${status}`;
+            statusEl.textContent = message;
+        }
+        
+        function connect() {
+            log(`Connecting as peer: ${peerId}`);
+            updateStatus('connecting', 'Connecting...');
+            
+            socket = new WebSocket('ws://localhost:8765');
+            
+            socket.onopen = function() {
+                log('✅ Connected to signaling server');
+                updateStatus('connecting', 'Connected to signaling server');
+                
+                // Join the room
+                socket.send(JSON.stringify({
+                    type: 'join',
+                    peer_id: peerId,
+                    room: 'test-room'
+                }));
+            };
+            
+            socket.onmessage = async function(event) {
+                const message = JSON.parse(event.data);
+                log(`📨 Received: ${JSON.stringify(message)}`);
+                
+                switch (message.type) {
+                    case 'peer_list':
+                        log(`Found ${message.peers.length} peers`);
+                        if (message.peers.length > 0) {
+                            // Connect to first peer
+                            const targetPeer = message.peers[0].peer_id;
+                            log(`Connecting to peer: ${targetPeer}`);
+                            await createPeerConnection(targetPeer);
+                        }
+                        break;
+                        
+                    case 'peer_joined':
+                        log(`New peer joined: ${message.peer_id}`);
+                        if (message.peer_id !== peerId) {
+                            await createPeerConnection(message.peer_id);
+                        }
+                        break;
+                        
+                    case 'offer':
+                        log(`Received offer from ${message.from}`);
+                        await handleOffer(message.from, message.offer);
+                        break;
+                        
+                    case 'answer':
+                        log(`Received answer from ${message.from}`);
+                        await handleAnswer(message.from, message.answer);
+                        break;
+                        
+                    case 'ice_candidate':
+                        log(`Received ICE candidate from ${message.from}`);
+                        await handleIceCandidate(message.from, message.candidate);
+                        break;
+                }
+            };
+            
+            socket.onclose = function() {
+                log('❌ Disconnected from signaling server');
+                updateStatus('disconnected', 'Disconnected');
+            };
+            
+            socket.onerror = function(error) {
+                log(`❌ Error: ${error}`);
+                updateStatus('disconnected', 'Connection Failed');
+            };
+        }
+        
+        async function createPeerConnection(targetPeer) {
+            log(`Creating peer connection to ${targetPeer}`);
+            
+            peerConnection = new RTCPeerConnection({
+                iceServers: [
+                    { urls: 'stun:stun.l.google.com:19302' },
+                    { urls: 'stun:stun1.l.google.com:19302' }
+                ]
+            });
+            
+            // Create data channel
+            dataChannel = peerConnection.createDataChannel('test', { ordered: true });
+            
+            dataChannel.onopen = function() {
+                log('✅ Data channel opened!');
+                updateStatus('connected', 'P2P Connected');
+                document.getElementById('messageInput').disabled = false;
+                document.getElementById('sendBtn').disabled = false;
+            };
+            
+            dataChannel.onmessage = function(event) {
+                log(`📨 Received message: ${event.data}`);
+            };
+            
+            peerConnection.onicecandidate = function(event) {
+                if (event.candidate) {
+                    log(`Sending ICE candidate to ${targetPeer}`);
+                    socket.send(JSON.stringify({
+                        type: 'ice_candidate',
+                        target: targetPeer,
+                        candidate: event.candidate
+                    }));
+                }
+            };
+            
+            peerConnection.onconnectionstatechange = function() {
+                log(`Connection state: ${peerConnection.connectionState}`);
+                if (peerConnection.connectionState === 'connected') {
+                    updateStatus('connected', 'P2P Connected');
+                } else if (peerConnection.connectionState === 'disconnected') {
+                    updateStatus('disconnected', 'Disconnected');
+                }
+            };
+            
+            // Create offer
+            try {
+                const offer = await peerConnection.createOffer();
+                await peerConnection.setLocalDescription(offer);
+                
+                log(`Sending offer to ${targetPeer}`);
+                socket.send(JSON.stringify({
+                    type: 'offer',
+                    target: targetPeer,
+                    offer: offer
+                }));
+            } catch (error) {
+                log(`❌ Error creating offer: ${error}`);
+            }
+        }
+        
+        async function handleOffer(from, offer) {
+            log(`Handling offer from ${from}`);
+            
+            if (!peerConnection) {
+                peerConnection = new RTCPeerConnection({
+                    iceServers: [
+                        { urls: 'stun:stun.l.google.com:19302' },
+                        { urls: 'stun:stun1.l.google.com:19302' }
+                    ]
+                });
+                
+                peerConnection.ondatachannel = function(event) {
+                    dataChannel = event.channel;
+                    dataChannel.onopen = function() {
+                        log('✅ Data channel opened!');
+                        updateStatus('connected', 'P2P Connected');
+                        document.getElementById('messageInput').disabled = false;
+                        document.getElementById('sendBtn').disabled = false;
+                    };
+                    dataChannel.onmessage = function(event) {
+                        log(`📨 Received message: ${event.data}`);
+                    };
+                };
+                
+                peerConnection.onicecandidate = function(event) {
+                    if (event.candidate) {
+                        log(`Sending ICE candidate to ${from}`);
+                        socket.send(JSON.stringify({
+                            type: 'ice_candidate',
+                            target: from,
+                            candidate: event.candidate
+                        }));
+                    }
+                };
+                
+                peerConnection.onconnectionstatechange = function() {
+                    log(`Connection state: ${peerConnection.connectionState}`);
+                    if (peerConnection.connectionState === 'connected') {
+                        updateStatus('connected', 'P2P Connected');
+                    } else if (peerConnection.connectionState === 'disconnected') {
+                        updateStatus('disconnected', 'Disconnected');
+                    }
+                };
+            }
+            
+            try {
+                await peerConnection.setRemoteDescription(offer);
+                
+                // Process any pending ICE candidates
+                for (const candidate of pendingIceCandidates) {
+                    try {
+                        await peerConnection.addIceCandidate(candidate);
+                        log(`✅ Added pending ICE candidate`);
+                    } catch (error) {
+                        log(`❌ Error adding pending ICE candidate: ${error}`);
+                    }
+                }
+                pendingIceCandidates = [];
+                
+                const answer = await peerConnection.createAnswer();
+                await peerConnection.setLocalDescription(answer);
+                
+                log(`Sending answer to ${from}`);
+                socket.send(JSON.stringify({
+                    type: 'answer',
+                    target: from,
+                    answer: answer
+                }));
+            } catch (error) {
+                log(`❌ Error handling offer: ${error}`);
+            }
+        }
+        
+        async function handleAnswer(from, answer) {
+            log(`Handling answer from ${from}`);
+            try {
+                await peerConnection.setRemoteDescription(answer);
+                
+                // Process any pending ICE candidates
+                for (const candidate of pendingIceCandidates) {
+                    try {
+                        await peerConnection.addIceCandidate(candidate);
+                        log(`✅ Added pending ICE candidate`);
+                    } catch (error) {
+                        log(`❌ Error adding pending ICE candidate: ${error}`);
+                    }
+                }
+                pendingIceCandidates = [];
+            } catch (error) {
+                log(`❌ Error handling answer: ${error}`);
+            }
+        }
+        
+        async function handleIceCandidate(from, candidate) {
+            log(`Handling ICE candidate from ${from}`);
+            try {
+                if (peerConnection && peerConnection.remoteDescription) {
+                    await peerConnection.addIceCandidate(candidate);
+                    log(`✅ Added ICE candidate`);
+                } else {
+                    // Store for later when remote description is set
+                    pendingIceCandidates.push(candidate);
+                    log(`⏳ Stored ICE candidate for later (${pendingIceCandidates.length} pending)`);
+                }
+            } catch (error) {
+                log(`❌ Error handling ICE candidate: ${error}`);
+            }
+        }
+        
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            
+            if (message && dataChannel && dataChannel.readyState === 'open') {
+                dataChannel.send(message);
+                log(`📤 Sent: ${message}`);
+                input.value = '';
+            }
+        }
+        
+        function disconnect() {
+            if (socket) {
+                socket.close();
+            }
+            if (peerConnection) {
+                peerConnection.close();
+            }
+            updateStatus('disconnected', 'Disconnected');
+            document.getElementById('messageInput').disabled = true;
+            document.getElementById('sendBtn').disabled = true;
+        }
+        
+        // Allow Enter key to send message
+        document.getElementById('messageInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>

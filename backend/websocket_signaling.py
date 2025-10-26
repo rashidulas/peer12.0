@@ -111,7 +111,10 @@ class WebSocketSignalingServer:
         message_str = json.dumps(message)
         disconnected = set()
         
-        for websocket in self.rooms[room_id]:
+        # Create a copy of the set to avoid "Set changed size during iteration" error
+        peers_to_notify = list(self.rooms[room_id])
+        
+        for websocket in peers_to_notify:
             if websocket == exclude:
                 continue
             
