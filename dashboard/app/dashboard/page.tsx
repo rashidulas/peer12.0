@@ -2,8 +2,7 @@
 import { AppSidebar } from "@/components/app-sidebar";
 import { SiteHeader } from "@/components/site-header";
 import SystemStatus from "@/components/SystemStatus";
-import SpeedTestPanel from "@/components/SpeedTestPanel";
-import AlertPanel from "@/components/AlertPanel";
+import ImprovedSpeedTestPanel from "@/components/ImprovedSpeedTestPanel";
 import LatencyChart from "@/components/LatencyChart";
 import SimpleMeshNetwork from "@/components/SimpleMeshNetwork";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,7 +13,7 @@ import { SpeedTestProvider, useSpeedTest } from "@/lib/SpeedTestContext";
 import { SimpleMeshProvider } from "@/lib/SimpleMeshService";
 import VenueHeatmap from "@/components/VenueHeatmap";
 import EdgeGlowCard from "@/components/edge-glow-card";
-import { ArrowDownRight, ArrowUpRight, Timer } from "lucide-react";
+import { ArrowDownToLine, ArrowUpToLine, Timer } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 /* HEALTH (unchanged) */
@@ -68,13 +67,13 @@ function ToolsSection() {
         title: "Download speed",
         value: formatBitrate(result?.download_mbps ?? null),
         helper: isRunning ? "Measuring…" : "Measured via latest test",
-        icon: <ArrowDownRight className="h-4 w-4" />,
+        icon: <ArrowDownToLine className="h-4 w-4" />,
       },
       {
         title: "Upload speed",
         value: formatBitrate(result?.upload_mbps ?? null),
         helper: isRunning ? "Measuring…" : "Measured via latest test",
-        icon: <ArrowUpRight className="h-4 w-4" />,
+        icon: <ArrowUpToLine className="h-4 w-4" />,
       },
       {
         title: "Ping",
@@ -86,77 +85,54 @@ function ToolsSection() {
     [result, isRunning]
   );
 
-  const serverLine = result?.server?.name
-    ? `Server: ${result.server.name}${
-        result.server.country ? `, ${result.server.country}` : ""
-      }`
-    : null;
-  const timeLine = result?.timestamp
-    ? new Date(result.timestamp).toLocaleString()
-    : null;
 
   return (
-    <section className="px-4 lg:px-8 max-w-screen-2xl mx-auto mt-2 grid grid-cols-12 gap-8">
-      {/* top row */}
-      <div className="col-span-12 lg:col-span-6">
+    <section className="px-4 lg:px-8 max-w-screen-2xl mx-auto mt-2 space-y-8">
+      {/* Main Speed Test Section */}
+      <div className="w-full">
         <EdgeGlowCard>
-          <Card className="h-full">
-            <CardHeader>
-              <CardTitle>Speed Test</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <SpeedTestPanel />
-            </CardContent>
-          </Card>
-        </EdgeGlowCard>
-      </div>
-      <div className="col-span-12 lg:col-span-6">
-        <EdgeGlowCard>
-          <Card className="h-full">
-            <CardHeader>
-              <CardTitle>Alerts</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <AlertPanel />
+          <Card className="p-0 overflow-hidden">
+            <CardContent className="p-8">
+              <ImprovedSpeedTestPanel />
             </CardContent>
           </Card>
         </EdgeGlowCard>
       </div>
 
-      {/* bottom row aligned exactly */}
-      {items.map((it) => (
-        <div key={it.title} className="col-span-12 md:col-span-6 lg:col-span-4">
-          <EdgeGlowCard>
-            <Card className="relative bg-gradient-to-b from-muted/40 to-background shadow-sm h-full">
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <CardTitle className="text-sm text-muted-foreground">
-                    {it.title}
-                  </CardTitle>
-                  <div className="rounded-md border bg-background p-1.5 text-muted-foreground">
-                    {it.icon}
+      {/* Quick Stats Row */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {items.map((it, index) => {
+          const colors = [
+            { bg: "from-blue-500/10 to-blue-600/5", border: "border-blue-200 dark:border-blue-800", icon: "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400" },
+            { bg: "from-green-500/10 to-green-600/5", border: "border-green-200 dark:border-green-800", icon: "bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400" },
+            { bg: "from-orange-500/10 to-orange-600/5", border: "border-orange-200 dark:border-orange-800", icon: "bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400" }
+          ];
+          const colorScheme = colors[index % colors.length];
+          
+          return (
+            <EdgeGlowCard key={it.title}>
+              <Card className={`relative bg-gradient-to-b ${colorScheme.bg} to-background shadow-sm h-full border ${colorScheme.border}`}>
+                <CardHeader className="pb-3">
+                  <div className="flex items-start justify-between">
+                    <CardTitle className="text-sm text-muted-foreground">
+                      {it.title}
+                    </CardTitle>
+                    <div className={`rounded-md border ${colorScheme.border} ${colorScheme.icon} p-1.5`}>
+                      {it.icon}
+                    </div>
                   </div>
-                </div>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="text-4xl font-semibold tracking-tight">
-                  {it.value}
-                </div>
-                <div className="mt-3 text-muted-foreground">{it.helper}</div>
-              </CardContent>
-            </Card>
-          </EdgeGlowCard>
-        </div>
-      ))}
-      {(serverLine || timeLine) && (
-        <div className="col-span-12 -mt-4 text-sm">
-          <span className="font-medium">{serverLine}</span>
-          {serverLine && timeLine ? " • " : ""}
-          {timeLine ? (
-            <span className="text-muted-foreground">Last run: {timeLine}</span>
-          ) : null}
-        </div>
-      )}
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <div className="text-4xl font-semibold tracking-tight">
+                    {it.value}
+                  </div>
+                  <div className="mt-3 text-muted-foreground">{it.helper}</div>
+                </CardContent>
+              </Card>
+            </EdgeGlowCard>
+          );
+        })}
+      </div>
     </section>
   );
 }
