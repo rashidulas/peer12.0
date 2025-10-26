@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Connection Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .status {
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 8px;
+            font-weight: bold;
+            text-align: center;
+        }
+        .connected { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .disconnected { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .connecting { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            border: none;
+            border-radius: 5px;
+            background: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover { background: #0056b3; }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 15px 0;
+            height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔌 WebSocket Connection Test</h1>
+    
+    <div id="status" class="status disconnected">Disconnected</div>
+    
+    <div>
+        <button onclick="testConnection()">Test WebSocket Connection</button>
+        <button onclick="clearLog()">Clear Log</button>
+    </div>
+    
+    <div class="log" id="log"></div>
+    
+    <div>
+        <h3>Test URLs:</h3>
+        <ul>
+            <li><code>ws://localhost:8765</code> - Local connection</li>
+            <li><code>ws://127.0.0.1:8765</code> - Alternative local</li>
+        </ul>
+    </div>
+
+    <script>
+        let socket = null;
+        
+        function log(message) {
+            const logEl = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            logEl.innerHTML += `[${timestamp}] ${message}\n`;
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+        
+        function updateStatus(status, message) {
+            const statusEl = document.getElementById('status');
+            statusEl.className = `status ${status}`;
+            statusEl.textContent = message;
+        }
+        
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+        }
+        
+        function testConnection() {
+            if (socket) {
+                socket.close();
+            }
+            
+            log('Testing WebSocket connection...');
+            updateStatus('connecting', 'Connecting...');
+            
+            // Test localhost first
+            const url = 'ws://localhost:8765';
+            log(`Attempting to connect to: ${url}`);
+            
+            try {
+                socket = new WebSocket(url);
+                
+                socket.onopen = function(event) {
+                    log('✅ WebSocket connection opened successfully!');
+                    updateStatus('connected', 'Connected to Signaling Server');
+                    
+                    // Send a test message
+                    const testMessage = {
+                        type: 'join',
+                        peer_id: 'test-peer-' + Date.now(),
+                        room: 'test-room'
+                    };
+                    
+                    log(`Sending test message: ${JSON.stringify(testMessage)}`);
+                    socket.send(JSON.stringify(testMessage));
+                };
+                
+                socket.onmessage = function(event) {
+                    log(`📨 Received message: ${event.data}`);
+                };
+                
+                socket.onclose = function(event) {
+                    log(`❌ WebSocket connection closed. Code: ${event.code}, Reason: ${event.reason}`);
+                    updateStatus('disconnected', 'Disconnected');
+                    socket = null;
+                };
+                
+                socket.onerror = function(error) {
+                    log(`❌ WebSocket error: ${error}`);
+                    updateStatus('disconnected', 'Connection Failed');
+                };
+                
+            } catch (error) {
+                log(`❌ Failed to create WebSocket: ${error.message}`);
+                updateStatus('disconnected', 'Connection Failed');
+            }
+        }
+        
+        // Auto-test on page load
+        window.onload = function() {
+            log('Page loaded. Click "Test WebSocket Connection" to begin.');
+        };
+    </script>
+</body>
+</html>

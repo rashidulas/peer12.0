@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P2P Mesh Network Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .connected { background-color: #d4edda; color: #155724; }
+        .disconnected { background-color: #f8d7da; color: #721c24; }
+        .connecting { background-color: #fff3cd; color: #856404; }
+        
+        .messages {
+            height: 300px;
+            border: 1px solid #ccc;
+            overflow-y: auto;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        
+        .message {
+            margin: 5px 0;
+            padding: 5px;
+            border-radius: 3px;
+        }
+        
+        .system { background-color: #e3f2fd; }
+        .user { background-color: #f3e5f5; }
+        .peer { background-color: #e8f5e8; }
+        
+        input, button {
+            padding: 8px;
+            margin: 5px;
+        }
+        
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        
+        button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <h1>P2P Mesh Network Test</h1>
+    
+    <div id="status" class="status disconnected">Disconnected</div>
+    
+    <div>
+        <strong>Your Peer ID:</strong> <span id="peerId">Generating...</span>
+    </div>
+    
+    <div>
+        <strong>Connected Peers:</strong> <span id="peerCount">0</span>
+    </div>
+    
+    <div class="messages" id="messages"></div>
+    
+    <div>
+        <input type="text" id="messageInput" placeholder="Type your message..." disabled>
+        <button id="sendButton" disabled>Send</button>
+        <button id="connectButton">Connect to Mesh</button>
+    </div>
+    
+    <div>
+        <h3>Technical Info:</h3>
+        <ul>
+            <li>Protocol: WebRTC DataChannel</li>
+            <li>NAT Traversal: STUN Servers</li>
+            <li>Encryption: DTLS/SRTP</li>
+            <li>Connection: Peer-to-Peer</li>
+        </ul>
+    </div>
+
+    <script>
+        class P2PMeshTest {
+            constructor() {
+                this.peerId = `peer-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+                this.connections = new Map();
+                this.isConnected = false;
+                this.signalingSocket = null;
+                this.broadcastChannel = null;
+                
+                this.initializeUI();
+                this.setupEventListeners();
+                this.initializeBroadcastChannel();
+            }
+            
+            initializeUI() {
+                document.getElementById('peerId').textContent = this.peerId;
+                this.updateStatus('disconnected', 'Disconnected');
+            }
+            
+            setupEventListeners() {
+                document.getElementById('connectButton').addEventListener('click', () => {
+                    if (this.isConnected) {
+                        this.disconnect();
+                    } else {
+                        this.connect();
+                    }
+                });
+                
+                document.getElementById('sendButton').addEventListener('click', () => {
+                    this.sendMessage();
+                });
+                
+                document.getElementById('messageInput').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        this.sendMessage();
+                    }
+                });
+            }
+            
+            initializeBroadcastChannel() {
+                // Use BroadcastChannel for cross-tab communication
+                this.broadcastChannel = new BroadcastChannel('p2p-mesh-network');
+                
+                this.broadcastChannel.onmessage = (event) => {
+                    const { type, data, from, timestamp } = event.data;
+                    
+                    if (type === 'peer-announcement' && from !== this.peerId) {
+                        console.log(`P2P: Discovered peer: ${from}`);
+                        this.addMessage(`Peer ${from} joined the network`, 'system');
+                        this.updatePeerCount();
+                    } else if (type === 'mesh-message' && from !== this.peerId) {
+                        console.log(`P2P: Received message from ${from}: ${data}`);
+                        this.addMessage(`[${from}]: ${data}`, 'peer');
+                    }
+                };
+                
+                // Announce our presence
+                this.announcePresence();
+                setInterval(() => this.announcePresence(), 5000);
+            }
+            
+            announcePresence() {
+                if (this.broadcastChannel) {
+                    this.broadcastChannel.postMessage({
+                        type: 'peer-announcement',
+                        from: this.peerId,
+                        timestamp: Date.now()
+                    });
+                }
+            }
+            
+            updateStatus(status, text) {
+                const statusEl = document.getElementById('status');
+                statusEl.className = `status ${status}`;
+                statusEl.textContent = text;
+            }
+            
+            addMessage(content, type = 'system') {
+                const messagesEl = document.getElementById('messages');
+                const messageEl = document.createElement('div');
+                messageEl.className = `message ${type}`;
+                messageEl.innerHTML = `
+                    <strong>${new Date().toLocaleTimeString()}</strong>: ${content}
+                `;
+                messagesEl.appendChild(messageEl);
+                messagesEl.scrollTop = messagesEl.scrollHeight;
+            }
+            
+            updatePeerCount() {
+                document.getElementById('peerCount').textContent = this.connections.size;
+            }
+            
+            async connect() {
+                this.updateStatus('connecting', 'Connecting...');
+                this.addMessage('Connecting to P2P mesh network...');
+                
+                try {
+                    // For demo purposes, we'll simulate a connection
+                    // In a real implementation, you'd connect to the signaling server
+                    await this.simulateConnection();
+                } catch (error) {
+                    this.addMessage(`Connection failed: ${error.message}`, 'system');
+                    this.updateStatus('disconnected', 'Connection Failed');
+                }
+            }
+            
+            async simulateConnection() {
+                // Simulate connection process
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // Create a demo peer connection
+                const demoConnection = await this.createPeerConnection('demo-peer-1');
+                this.connections.set('demo-peer-1', demoConnection);
+                
+                this.isConnected = true;
+                this.updateStatus('connected', 'Connected to P2P Mesh');
+                this.updatePeerCount();
+                this.addMessage('Connected to P2P mesh network!', 'system');
+                
+                // Enable message input
+                document.getElementById('messageInput').disabled = false;
+                document.getElementById('sendButton').disabled = false;
+                document.getElementById('connectButton').textContent = 'Disconnect';
+                
+                // Simulate receiving a message
+                setTimeout(() => {
+                    this.addMessage('Welcome to the P2P mesh network!', 'peer');
+                }, 2000);
+            }
+            
+            async createPeerConnection(peerId) {
+                const peerConnection = new RTCPeerConnection({
+                    iceServers: [
+                        { urls: 'stun:stun.l.google.com:19302' },
+                        { urls: 'stun:stun1.l.google.com:19302' }
+                    ]
+                });
+                
+                const dataChannel = peerConnection.createDataChannel('mesh', {
+                    ordered: true
+                });
+                
+                dataChannel.onopen = () => {
+                    console.log(`Data channel opened with ${peerId}`);
+                };
+                
+                dataChannel.onmessage = (event) => {
+                    try {
+                        const message = JSON.parse(event.data);
+                        this.addMessage(`[${peerId}]: ${message.data || message}`, 'peer');
+                    } catch (error) {
+                        this.addMessage(`[${peerId}]: ${event.data}`, 'peer');
+                    }
+                };
+                
+                return { peerConnection, dataChannel };
+            }
+            
+            sendMessage() {
+                const input = document.getElementById('messageInput');
+                const message = input.value.trim();
+                
+                if (!message) return;
+                
+                // Add to local messages
+                this.addMessage(`[You]: ${message}`, 'user');
+                
+                // Send via BroadcastChannel for cross-tab communication
+                if (this.broadcastChannel) {
+                    this.broadcastChannel.postMessage({
+                        type: 'mesh-message',
+                        data: message,
+                        from: this.peerId,
+                        timestamp: Date.now()
+                    });
+                }
+                
+                // Also send to WebRTC connected peers
+                const meshMessage = {
+                    type: 'mesh-message',
+                    data: message,
+                    timestamp: Date.now(),
+                    from: this.peerId
+                };
+                
+                this.connections.forEach((connection, peerId) => {
+                    if (connection.dataChannel.readyState === 'open') {
+                        connection.dataChannel.send(JSON.stringify(meshMessage));
+                    }
+                });
+                
+                input.value = '';
+            }
+            
+            disconnect() {
+                this.connections.forEach((connection, peerId) => {
+                    connection.peerConnection.close();
+                });
+                
+                this.connections.clear();
+                this.isConnected = false;
+                
+                this.updateStatus('disconnected', 'Disconnected');
+                this.updatePeerCount();
+                this.addMessage('Disconnected from P2P mesh network', 'system');
+                
+                // Disable message input
+                document.getElementById('messageInput').disabled = true;
+                document.getElementById('sendButton').disabled = true;
+                document.getElementById('connectButton').textContent = 'Connect to Mesh';
+            }
+            
+            updatePeerCount() {
+                // Count peers from BroadcastChannel announcements
+                // In a real implementation, you'd track actual WebRTC connections
+                document.getElementById('peerCount').textContent = this.connections.size + 1; // +1 for self
+            }
+        }
+        
+        // Initialize the P2P mesh test
+        const p2pMesh = new P2PMeshTest();
+    </script>
+</body>
+</html>

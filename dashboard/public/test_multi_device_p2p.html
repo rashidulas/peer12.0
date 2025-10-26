@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Device P2P Mesh Network Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        
+        .status {
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 10px;
+            font-weight: bold;
+            text-align: center;
+        }
+        .connected { background: rgba(34, 197, 94, 0.3); border: 2px solid #22c55e; }
+        .disconnected { background: rgba(239, 68, 68, 0.3); border: 2px solid #ef4444; }
+        .connecting { background: rgba(245, 158, 11, 0.3); border: 2px solid #f59e0b; }
+        
+        .messages {
+            height: 300px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            overflow-y: auto;
+            padding: 15px;
+            margin: 15px 0;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .message {
+            margin: 8px 0;
+            padding: 10px;
+            border-radius: 8px;
+            word-wrap: break-word;
+        }
+        
+        .system { background: rgba(59, 130, 246, 0.3); border-left: 4px solid #3b82f6; }
+        .user { background: rgba(16, 185, 129, 0.3); border-left: 4px solid #10b981; }
+        .peer { background: rgba(168, 85, 247, 0.3); border-left: 4px solid #a855f7; }
+        
+        input, button {
+            padding: 12px;
+            margin: 8px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        input {
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            flex: 1;
+        }
+        
+        button {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.2s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+        }
+        
+        button:disabled {
+            background: rgba(255, 255, 255, 0.3);
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .peer-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 10px 0;
+        }
+        
+        .peer-badge {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .stat-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #fbbf24;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .instructions {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid #fbbf24;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌐 Multi-Device P2P Mesh Network</h1>
+        
+        <div id="status" class="status disconnected">Disconnected</div>
+        
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-value" id="peerCount">0</div>
+                <div class="stat-label">Connected Peers</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="discoveredCount">0</div>
+                <div class="stat-label">Discovered Peers</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="messageCount">0</div>
+                <div class="stat-label">Messages Sent</div>
+            </div>
+        </div>
+        
+        <div class="instructions">
+            <h3>🚀 How to Test Multi-Device P2P:</h3>
+            <ol>
+                <li><strong>Start the signaling server:</strong> <code>python3 backend/websocket_signaling.py</code></li>
+                <li><strong>Open this page on multiple devices</strong> (phone, tablet, laptop) on the same network</li>
+                <li><strong>Watch peers discover each other</strong> automatically</li>
+                <li><strong>Send messages</strong> - they'll appear on all connected devices!</li>
+            </ol>
+        </div>
+        
+        <div>
+            <strong>Your Peer ID:</strong> <span id="peerId">Generating...</span>
+        </div>
+        
+        <div>
+            <strong>Discovered Peers:</strong>
+            <div class="peer-list" id="peerList"></div>
+        </div>
+        
+        <div class="messages" id="messages"></div>
+        
+        <div class="input-group">
+            <input type="text" id="messageInput" placeholder="Type your message..." disabled>
+            <button id="sendButton" disabled>Send Message</button>
+            <button id="connectButton">Connect to Mesh</button>
+        </div>
+        
+        <div style="margin-top: 20px; font-size: 12px; opacity: 0.8;">
+            <strong>Technical Details:</strong><br>
+            • Protocol: WebRTC DataChannel<br>
+            • Signaling: WebSocket Server (ws://localhost:8765)<br>
+            • NAT Traversal: STUN Servers<br>
+            • Encryption: DTLS/SRTP<br>
+            • Connection: True Peer-to-Peer
+        </div>
+    </div>
+
+    <script>
+        class MultiDeviceP2PTest {
+            constructor() {
+                this.peerId = `peer-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+                this.connections = new Map();
+                this.discoveredPeers = new Set();
+                this.isConnected = false;
+                this.signalingSocket = null;
+                this.messageCount = 0;
+                
+                this.initializeUI();
+                this.setupEventListeners();
+            }
+            
+            initializeUI() {
+                document.getElementById('peerId').textContent = this.peerId;
+                this.updateStatus('disconnected', 'Disconnected');
+                this.updateStats();
+            }
+            
+            setupEventListeners() {
+                document.getElementById('connectButton').addEventListener('click', () => {
+                    if (this.isConnected) {
+                        this.disconnect();
+                    } else {
+                        this.connect();
+                    }
+                });
+                
+                document.getElementById('sendButton').addEventListener('click', () => {
+                    this.sendMessage();
+                });
+                
+                document.getElementById('messageInput').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        this.sendMessage();
+                    }
+                });
+            }
+            
+            updateStatus(status, text) {
+                const statusEl = document.getElementById('status');
+                statusEl.className = `status ${status}`;
+                statusEl.textContent = text;
+            }
+            
+            updateStats() {
+                document.getElementById('peerCount').textContent = this.connections.size;
+                document.getElementById('discoveredCount').textContent = this.discoveredPeers.size;
+                document.getElementById('messageCount').textContent = this.messageCount;
+                
+                // Update peer list
+                const peerListEl = document.getElementById('peerList');
+                peerListEl.innerHTML = '';
+                this.discoveredPeers.forEach(peerId => {
+                    const badge = document.createElement('div');
+                    badge.className = 'peer-badge';
+                    badge.textContent = peerId;
+                    peerListEl.appendChild(badge);
+                });
+            }
+            
+            addMessage(content, type = 'system') {
+                const messagesEl = document.getElementById('messages');
+                const messageEl = document.createElement('div');
+                messageEl.className = `message ${type}`;
+                messageEl.innerHTML = `
+                    <strong>${new Date().toLocaleTimeString()}</strong>: ${content}
+                `;
+                messagesEl.appendChild(messageEl);
+                messagesEl.scrollTop = messagesEl.scrollHeight;
+            }
+            
+            async connect() {
+                this.updateStatus('connecting', 'Connecting to signaling server...');
+                this.addMessage('Connecting to P2P mesh network...');
+                
+                try {
+                    const serverUrl = this.getSignalingServerUrl();
+                    this.signalingSocket = new WebSocket(serverUrl);
+                    
+                    this.signalingSocket.onopen = () => {
+                        this.addMessage('Connected to signaling server');
+                        this.updateStatus('connecting', 'Discovering peers...');
+                        
+                        // Join the mesh network
+                        this.signalingSocket.send(JSON.stringify({
+                            type: 'join',
+                            peer_id: this.peerId,
+                            room: 'hackathon-mesh'
+                        }));
+                    };
+                    
+                    this.signalingSocket.onmessage = async (event) => {
+                        const message = JSON.parse(event.data);
+                        await this.handleSignalingMessage(message);
+                    };
+                    
+                    this.signalingSocket.onclose = () => {
+                        this.addMessage('Disconnected from signaling server');
+                        this.updateStatus('disconnected', 'Disconnected');
+                        this.signalingSocket = null;
+                        
+                        // Attempt to reconnect
+                        setTimeout(() => this.connect(), 3000);
+                    };
+                    
+                    this.signalingSocket.onerror = (error) => {
+                        this.addMessage(`Signaling server error: ${error}`);
+                        this.updateStatus('disconnected', 'Connection Failed');
+                    };
+                    
+                } catch (error) {
+                    this.addMessage(`Connection failed: ${error.message}`);
+                    this.updateStatus('disconnected', 'Connection Failed');
+                }
+            }
+            
+            getSignalingServerUrl() {
+                const hostname = window.location.hostname;
+                if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '') {
+                    return 'ws://localhost:8765';
+                } else {
+                    return `ws://${hostname}:8765`;
+                }
+            }
+            
+            async handleSignalingMessage(message) {
+                switch (message.type) {
+                    case 'peer_list':
+                        this.addMessage(`Discovered ${message.peers.length} peers`);
+                        message.peers.forEach(peer => {
+                            this.discoveredPeers.add(peer.peer_id);
+                            this.initiateConnection(peer.peer_id);
+                        });
+                        this.updateStats();
+                        break;
+                        
+                    case 'peer_joined':
+                        this.addMessage(`Peer joined: ${message.peer_id}`);
+                        this.discoveredPeers.add(message.peer_id);
+                        this.initiateConnection(message.peer_id);
+                        this.updateStats();
+                        break;
+                        
+                    case 'peer_left':
+                        this.addMessage(`Peer left: ${message.peer_id}`);
+                        this.discoveredPeers.delete(message.peer_id);
+                        this.connections.delete(message.peer_id);
+                        this.updateStats();
+                        break;
+                        
+                    case 'offer':
+                        await this.handleOffer(message.from, message.offer);
+                        break;
+                        
+                    case 'answer':
+                        await this.handleAnswer(message.from, message.answer);
+                        break;
+                        
+                    case 'ice_candidate':
+                        await this.handleIceCandidate(message.from, message.candidate);
+                        break;
+                }
+            }
+            
+            async initiateConnection(peerId) {
+                if (this.connections.has(peerId)) return;
+                
+                this.addMessage(`Initiating connection to ${peerId}`);
+                const connection = this.createPeerConnection(peerId);
+                
+                try {
+                    const offer = await connection.peerConnection.createOffer();
+                    await connection.peerConnection.setLocalDescription(offer);
+                    
+                    this.signalingSocket.send(JSON.stringify({
+                        type: 'offer',
+                        target: peerId,
+                        offer: offer
+                    }));
+                } catch (error) {
+                    this.addMessage(`Error creating offer for ${peerId}: ${error}`);
+                }
+            }
+            
+            createPeerConnection(peerId) {
+                const peerConnection = new RTCPeerConnection({
+                    iceServers: [
+                        { urls: 'stun:stun.l.google.com:19302' },
+                        { urls: 'stun:stun1.l.google.com:19302' },
+                        { urls: 'stun:stun2.l.google.com:19302' }
+                    ]
+                });
+                
+                const dataChannel = peerConnection.createDataChannel('mesh', {
+                    ordered: true
+                });
+                
+                const connection = { peerConnection, dataChannel, isConnected: false };
+                this.connections.set(peerId, connection);
+                
+                dataChannel.onopen = () => {
+                    this.addMessage(`Connected to ${peerId}`);
+                    connection.isConnected = true;
+                    this.isConnected = true;
+                    this.updateStatus('connected', 'Connected to P2P Mesh');
+                    this.updateStats();
+                    
+                    // Enable message input
+                    document.getElementById('messageInput').disabled = false;
+                    document.getElementById('sendButton').disabled = false;
+                    document.getElementById('connectButton').textContent = 'Disconnect';
+                };
+                
+                dataChannel.onmessage = (event) => {
+                    try {
+                        const message = JSON.parse(event.data);
+                        if (message.type === 'mesh-message') {
+                            this.addMessage(`[${peerId}]: ${message.data}`, 'peer');
+                        }
+                    } catch (error) {
+                        this.addMessage(`[${peerId}]: ${event.data}`, 'peer');
+                    }
+                };
+                
+                peerConnection.onicecandidate = (event) => {
+                    if (event.candidate && this.signalingSocket) {
+                        this.signalingSocket.send(JSON.stringify({
+                            type: 'ice_candidate',
+                            target: peerId,
+                            candidate: event.candidate
+                        }));
+                    }
+                };
+                
+                peerConnection.onconnectionstatechange = () => {
+                    if (peerConnection.connectionState === 'disconnected' || 
+                        peerConnection.connectionState === 'failed') {
+                        this.addMessage(`Disconnected from ${peerId}`);
+                        this.connections.delete(peerId);
+                        this.updateStats();
+                        
+                        if (this.connections.size === 0) {
+                            this.isConnected = false;
+                            this.updateStatus('disconnected', 'Disconnected');
+                            document.getElementById('messageInput').disabled = true;
+                            document.getElementById('sendButton').disabled = true;
+                            document.getElementById('connectButton').textContent = 'Connect to Mesh';
+                        }
+                    }
+                };
+                
+                return connection;
+            }
+            
+            async handleOffer(from, offer) {
+                if (this.connections.has(from)) return;
+                
+                this.addMessage(`Handling offer from ${from}`);
+                const connection = this.createPeerConnection(from);
+                
+                try {
+                    await connection.peerConnection.setRemoteDescription(offer);
+                    const answer = await connection.peerConnection.createAnswer();
+                    await connection.peerConnection.setLocalDescription(answer);
+                    
+                    this.signalingSocket.send(JSON.stringify({
+                        type: 'answer',
+                        target: from,
+                        answer: answer
+                    }));
+                } catch (error) {
+                    this.addMessage(`Error handling offer from ${from}: ${error}`);
+                }
+            }
+            
+            async handleAnswer(from, answer) {
+                const connection = this.connections.get(from);
+                if (!connection) return;
+                
+                try {
+                    await connection.peerConnection.setRemoteDescription(answer);
+                } catch (error) {
+                    this.addMessage(`Error handling answer from ${from}: ${error}`);
+                }
+            }
+            
+            async handleIceCandidate(from, candidate) {
+                const connection = this.connections.get(from);
+                if (!connection) return;
+                
+                try {
+                    await connection.peerConnection.addIceCandidate(candidate);
+                } catch (error) {
+                    this.addMessage(`Error handling ICE candidate from ${from}: ${error}`);
+                }
+            }
+            
+            sendMessage() {
+                const input = document.getElementById('messageInput');
+                const message = input.value.trim();
+                
+                if (!message) return;
+                
+                this.addMessage(`[You]: ${message}`, 'user');
+                this.messageCount++;
+                this.updateStats();
+                
+                const meshMessage = {
+                    type: 'mesh-message',
+                    data: message,
+                    from: this.peerId,
+                    timestamp: Date.now()
+                };
+                
+                this.connections.forEach((connection, peerId) => {
+                    if (connection.dataChannel.readyState === 'open') {
+                        connection.dataChannel.send(JSON.stringify(meshMessage));
+                    }
+                });
+                
+                input.value = '';
+            }
+            
+            disconnect() {
+                this.connections.forEach((connection, peerId) => {
+                    connection.peerConnection.close();
+                });
+                
+                if (this.signalingSocket) {
+                    this.signalingSocket.close();
+                }
+                
+                this.connections.clear();
+                this.discoveredPeers.clear();
+                this.isConnected = false;
+                
+                this.updateStatus('disconnected', 'Disconnected');
+                this.updateStats();
+                this.addMessage('Disconnected from P2P mesh network');
+                
+                document.getElementById('messageInput').disabled = true;
+                document.getElementById('sendButton').disabled = true;
+                document.getElementById('connectButton').textContent = 'Connect to Mesh';
+            }
+        }
+        
+        // Initialize the multi-device P2P test
+        const p2pMesh = new MultiDeviceP2PTest();
+    </script>
+</body>
+</html>
