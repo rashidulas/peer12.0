@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebSocket Connection Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .log { background: #f0f0f0; padding: 10px; height: 300px; overflow-y: scroll; border: 1px solid #ccc; }
+        button { padding: 10px 20px; margin: 5px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .connected { background: #d4edda; color: #155724; }
+        .disconnected { background: #f8d7da; color: #721c24; }
+        .connecting { background: #fff3cd; color: #856404; }
+    </style>
+</head>
+<body>
+    <h1>🔌 WebSocket Connection Test</h1>
+    
+    <div id="status" class="status disconnected">Disconnected</div>
+    
+    <button onclick="connect()">Connect to WebSocket</button>
+    <button onclick="disconnect()">Disconnect</button>
+    <button onclick="clearLog()">Clear Log</button>
+    
+    <h3>Log:</h3>
+    <div class="log" id="log"></div>
+
+    <script>
+        let socket = null;
+        
+        function log(message) {
+            const logEl = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            logEl.innerHTML += `[${timestamp}] ${message}\n`;
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+        
+        function updateStatus(status, message) {
+            const statusEl = document.getElementById('status');
+            statusEl.className = `status ${status}`;
+            statusEl.textContent = message;
+        }
+        
+        function connect() {
+            log('Attempting to connect to WebSocket...');
+            updateStatus('connecting', 'Connecting...');
+            
+            // Use hostname instead of localhost for multi-device support
+            const hostname = window.location.hostname;
+            const wsUrl = hostname === 'localhost' || hostname === '127.0.0.1' 
+                ? 'ws://localhost:8765' 
+                : `ws://${hostname}:8765`;
+            
+            log(`Connecting to: ${wsUrl}`);
+            socket = new WebSocket(wsUrl);
+            
+            socket.onopen = function() {
+                log('✅ Connected to WebSocket server!');
+                updateStatus('connected', 'Connected');
+                
+                // Send a test message
+                const testMessage = {
+                    type: 'join',
+                    peer_id: `test-peer-${Date.now()}`,
+                    room: 'hackathon-mesh'
+                };
+                socket.send(JSON.stringify(testMessage));
+                log(`📤 Sent: ${JSON.stringify(testMessage)}`);
+            };
+            
+            socket.onmessage = function(event) {
+                log(`📨 Received: ${event.data}`);
+            };
+            
+            socket.onclose = function(event) {
+                log(`🔌 WebSocket closed: ${event.code} - ${event.reason}`);
+                updateStatus('disconnected', 'Disconnected');
+            };
+            
+            socket.onerror = function(error) {
+                log(`❌ WebSocket error: ${error}`);
+                updateStatus('disconnected', 'Connection Failed');
+            };
+        }
+        
+        function disconnect() {
+            if (socket) {
+                socket.close();
+                socket = null;
+                log('Disconnected from WebSocket server');
+                updateStatus('disconnected', 'Disconnected');
+            }
+        }
+        
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+        }
+        
+        // Auto-connect on page load
+        window.onload = function() {
+            log('Page loaded. Click "Connect to WebSocket" to test connection.');
+        };
+    </script>
+</body>
+</html>

@@ -4,13 +4,14 @@ import { SiteHeader } from "@/components/site-header";
 import SystemStatus from "@/components/SystemStatus";
 import SpeedTestPanel from "@/components/SpeedTestPanel";
 import AlertPanel from "@/components/AlertPanel";
-import NetworkMesh from "@/components/NetworkMesh";
 import LatencyChart from "@/components/LatencyChart";
+import SimpleMeshNetwork from "@/components/SimpleMeshNetwork";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { P2PMetricsProvider, useP2PMetrics } from "@/lib/P2PMetricsContext";
 import { LiveKitProvider } from "@/lib/LiveKitService";
 import { SpeedTestProvider, useSpeedTest } from "@/lib/SpeedTestContext";
+import { SimpleMeshProvider } from "@/lib/SimpleMeshService";
 import VenueHeatmap from "@/components/VenueHeatmap";
 import EdgeGlowCard from "@/components/edge-glow-card";
 import { ArrowDownRight, ArrowUpRight, Timer } from "lucide-react";
@@ -26,13 +27,21 @@ function HomeSection() {
       </div>
       <section className="px-4 lg:px-6 grid gap-6">
         <Card>
-          <CardHeader><CardTitle>Venue Floorplan (Wi-Fi Signal Overlay)</CardTitle></CardHeader>
-          <CardContent><VenueHeatmap /></CardContent>
+          <CardHeader>
+            <CardTitle>Venue Floorplan (Wi-Fi Signal Overlay)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <VenueHeatmap />
+          </CardContent>
         </Card>
-        <Card>
-          <CardHeader><CardTitle>System Status</CardTitle></CardHeader>
-          <CardContent><SystemStatus /></CardContent>
-        </Card>
+        {/* <Card>
+          <CardHeader>
+            <CardTitle>System Status</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <SystemStatus />
+          </CardContent>
+        </Card> */}
       </section>
     </>
   );
@@ -55,16 +64,36 @@ function ToolsSection() {
   const { result, isRunning } = useSpeedTest();
   const items = useMemo(
     () => [
-      { title: "Download speed", value: formatBitrate(result?.download_mbps ?? null), helper: isRunning ? "Measuring…" : "Measured via latest test", icon: <ArrowDownRight className="h-4 w-4" /> },
-      { title: "Upload speed",   value: formatBitrate(result?.upload_mbps ?? null),   helper: isRunning ? "Measuring…" : "Measured via latest test", icon: <ArrowUpRight className="h-4 w-4" /> },
-      { title: "Ping",           value: formatPing(result?.ping_ms ?? null),          helper: isRunning ? "Measuring…" : "Measured via latest test", icon: <Timer className="h-4 w-4" /> },
+      {
+        title: "Download speed",
+        value: formatBitrate(result?.download_mbps ?? null),
+        helper: isRunning ? "Measuring…" : "Measured via latest test",
+        icon: <ArrowDownRight className="h-4 w-4" />,
+      },
+      {
+        title: "Upload speed",
+        value: formatBitrate(result?.upload_mbps ?? null),
+        helper: isRunning ? "Measuring…" : "Measured via latest test",
+        icon: <ArrowUpRight className="h-4 w-4" />,
+      },
+      {
+        title: "Ping",
+        value: formatPing(result?.ping_ms ?? null),
+        helper: isRunning ? "Measuring…" : "Measured via latest test",
+        icon: <Timer className="h-4 w-4" />,
+      },
     ],
     [result, isRunning]
   );
 
-  const serverLine =
-    result?.server?.name ? `Server: ${result.server.name}${result.server.country ? `, ${result.server.country}` : ""}` : null;
-  const timeLine = result?.timestamp ? new Date(result.timestamp).toLocaleString() : null;
+  const serverLine = result?.server?.name
+    ? `Server: ${result.server.name}${
+        result.server.country ? `, ${result.server.country}` : ""
+      }`
+    : null;
+  const timeLine = result?.timestamp
+    ? new Date(result.timestamp).toLocaleString()
+    : null;
 
   return (
     <section className="px-4 lg:px-8 max-w-screen-2xl mx-auto mt-2 grid grid-cols-12 gap-8">
@@ -72,16 +101,24 @@ function ToolsSection() {
       <div className="col-span-12 lg:col-span-6">
         <EdgeGlowCard>
           <Card className="h-full">
-            <CardHeader><CardTitle>Speed Test</CardTitle></CardHeader>
-            <CardContent><SpeedTestPanel /></CardContent>
+            <CardHeader>
+              <CardTitle>Speed Test</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <SpeedTestPanel />
+            </CardContent>
           </Card>
         </EdgeGlowCard>
       </div>
       <div className="col-span-12 lg:col-span-6">
         <EdgeGlowCard>
           <Card className="h-full">
-            <CardHeader><CardTitle>Alerts</CardTitle></CardHeader>
-            <CardContent><AlertPanel /></CardContent>
+            <CardHeader>
+              <CardTitle>Alerts</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <AlertPanel />
+            </CardContent>
           </Card>
         </EdgeGlowCard>
       </div>
@@ -93,14 +130,18 @@ function ToolsSection() {
             <Card className="relative bg-gradient-to-b from-muted/40 to-background shadow-sm h-full">
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
-                  <CardTitle className="text-sm text-muted-foreground">{it.title}</CardTitle>
+                  <CardTitle className="text-sm text-muted-foreground">
+                    {it.title}
+                  </CardTitle>
                   <div className="rounded-md border bg-background p-1.5 text-muted-foreground">
                     {it.icon}
                   </div>
                 </div>
               </CardHeader>
               <CardContent className="pt-0">
-                <div className="text-4xl font-semibold tracking-tight">{it.value}</div>
+                <div className="text-4xl font-semibold tracking-tight">
+                  {it.value}
+                </div>
                 <div className="mt-3 text-muted-foreground">{it.helper}</div>
               </CardContent>
             </Card>
@@ -111,7 +152,9 @@ function ToolsSection() {
         <div className="col-span-12 -mt-4 text-sm">
           <span className="font-medium">{serverLine}</span>
           {serverLine && timeLine ? " • " : ""}
-          {timeLine ? <span className="text-muted-foreground">Last run: {timeLine}</span> : null}
+          {timeLine ? (
+            <span className="text-muted-foreground">Last run: {timeLine}</span>
+          ) : null}
         </div>
       )}
     </section>
@@ -137,7 +180,11 @@ function DashboardContent() {
         } as React.CSSProperties
       }
     >
-      <AppSidebar variant="inset" activeView={activeView} onViewChange={setActiveView} />
+      <AppSidebar
+        variant="inset"
+        activeView={activeView}
+        onViewChange={setActiveView}
+      />
       <SidebarInset>
         <SiteHeader />
         <div className="flex flex-1 flex-col">
@@ -146,10 +193,7 @@ function DashboardContent() {
               {activeView === "health" && <HomeSection />}
               {activeView === "mesh" && (
                 <section className="px-4 lg:px-6">
-                  <Card>
-                    <CardHeader><CardTitle>Network Mesh Visualization</CardTitle></CardHeader>
-                    <CardContent><NetworkMesh /></CardContent>
-                  </Card>
+                  <SimpleMeshNetwork />
                 </section>
               )}
               {activeView === "tools" && <ToolsSection />}
@@ -166,7 +210,9 @@ export default function Page() {
     <P2PMetricsProvider>
       <LiveKitProvider>
         <SpeedTestProvider>
-          <DashboardContent />
+          <SimpleMeshProvider>
+            <DashboardContent />
+          </SimpleMeshProvider>
         </SpeedTestProvider>
       </LiveKitProvider>
     </P2PMetricsProvider>

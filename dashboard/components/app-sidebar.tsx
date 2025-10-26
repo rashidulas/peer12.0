@@ -83,7 +83,7 @@ export function AppSidebar({
             >
               <a href="#">
                 <IconInnerShadowTop className="!size-5" />
-                <span className="text-base font-semibold">NetAgent</span>
+                <span className="text-base font-semibold">peer12.0</span>
               </a>
             </SidebarMenuButton>
           </SidebarMenuItem>
