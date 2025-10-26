@@ -75,6 +75,8 @@
         let dataChannel = null;
         let peerId = `peer-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
         let pendingIceCandidates = [];
+        let isInitiator = false;
+        let connectionAttempts = new Set();
         
         function log(message) {
             const logEl = document.getElementById('log');
@@ -115,17 +117,30 @@
                     case 'peer_list':
                         log(`Found ${message.peers.length} peers`);
                         if (message.peers.length > 0) {
-                            // Connect to first peer
+                            // Only initiate connection if we haven't already attempted it
                             const targetPeer = message.peers[0].peer_id;
-                            log(`Connecting to peer: ${targetPeer}`);
-                            await createPeerConnection(targetPeer);
+                            if (!connectionAttempts.has(targetPeer)) {
+                                connectionAttempts.add(targetPeer);
+                                // Use peer ID comparison to determine who initiates
+                                isInitiator = peerId < targetPeer;
+                                log(`I am ${isInitiator ? 'initiator' : 'responder'} for peer: ${targetPeer}`);
+                                if (isInitiator) {
+                                    await createPeerConnection(targetPeer);
+                                }
+                            }
                         }
                         break;
                         
                     case 'peer_joined':
                         log(`New peer joined: ${message.peer_id}`);
-                        if (message.peer_id !== peerId) {
-                            await createPeerConnection(message.peer_id);
+                        if (message.peer_id !== peerId && !connectionAttempts.has(message.peer_id)) {
+                            connectionAttempts.add(message.peer_id);
+                            // Use peer ID comparison to determine who initiates
+                            isInitiator = peerId < message.peer_id;
+                            log(`I am ${isInitiator ? 'initiator' : 'responder'} for peer: ${message.peer_id}`);
+                            if (isInitiator) {
+                                await createPeerConnection(message.peer_id);
+                            }
                         }
                         break;
                         
@@ -220,6 +235,12 @@
         async function handleOffer(from, offer) {
             log(`Handling offer from ${from}`);
             
+            // Only handle offer if we're the responder (not initiator)
+            if (isInitiator) {
+                log(`Ignoring offer - I am the initiator`);
+                return;
+            }
+            
             if (!peerConnection) {
                 peerConnection = new RTCPeerConnection({
                     iceServers: [
@@ -292,6 +313,13 @@
         
         async function handleAnswer(from, answer) {
             log(`Handling answer from ${from}`);
+            
+            // Only handle answer if we're the initiator
+            if (!isInitiator) {
+                log(`Ignoring answer - I am the responder`);
+                return;
+            }
+            
             try {
                 await peerConnection.setRemoteDescription(answer);
                 
