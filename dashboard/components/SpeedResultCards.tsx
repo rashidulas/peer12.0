@@ -2,13 +2,13 @@
 import { useSpeedTest } from "@/lib/SpeedTestContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowDownRight, ArrowUpRight, Timer } from "lucide-react";
+import EdgeGlowCard from "@/components/edge-glow-card";
 
 // format download/upload into mbps/kbps with unit appended
 function formatBitrate(mbps: number | null | undefined) {
   if (mbps == null) return "—";
   if (mbps >= 1) return `${mbps.toFixed(2)} mbps`;
   const kbps = mbps * 1000;
-  // show as whole number if < 10 kbps? keep one decimal just in case
   return `${kbps >= 10 ? Math.round(kbps) : kbps.toFixed(1)} kbps`;
 }
 
@@ -30,8 +30,8 @@ function StatCard({
   icon: React.ReactNode;
 }) {
   return (
-    <Card className="relative bg-gradient-to-b from-muted/40 to-background shadow-sm">
-      <CardHeader className="pb-2">
+    <Card className="relative bg-gradient-to-b from-muted/40 to-background shadow-sm h-full">
+      <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <CardTitle className="text-sm text-muted-foreground">{title}</CardTitle>
           <div className="rounded-md border bg-background p-1.5 text-muted-foreground">
@@ -40,8 +40,8 @@ function StatCard({
         </div>
       </CardHeader>
       <CardContent className="pt-0">
-        <div className="text-3xl font-semibold tracking-tight">{value}</div>
-        {helper && <div className="mt-2 text-muted-foreground">{helper}</div>}
+        <div className="text-4xl font-semibold tracking-tight">{value}</div>
+        {helper && <div className="mt-3 text-muted-foreground">{helper}</div>}
       </CardContent>
     </Card>
   );
@@ -84,23 +84,27 @@ export default function SpeedResultCards() {
 
   return (
     <>
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      {/* Larger, evenly spread cards; nearly full width */}
+      <div className="grid gap-8 grid-cols-1 md:grid-cols-3">
         {items.map((it) => (
-          <StatCard
-            key={it.title}
-            title={it.title}
-            value={it.value}
-            helper={it.helper}
-            icon={it.icon}
-          />
+          <EdgeGlowCard key={it.title}>
+            <StatCard
+              title={it.title}
+              value={it.value}
+              helper={it.helper}
+              icon={it.icon}
+            />
+          </EdgeGlowCard>
         ))}
       </div>
 
       {(serverLine || timeLine) && (
-        <div className="mt-3 text-sm">
+        <div className="mt-4 text-sm">
           <span className="font-medium">{serverLine}</span>
           {serverLine && timeLine ? " • " : ""}
-          {timeLine ? <span className="text-muted-foreground">Last run: {timeLine}</span> : null}
+          {timeLine ? (
+            <span className="text-muted-foreground">Last run: {timeLine}</span>
+          ) : null}
         </div>
       )}
     </>
