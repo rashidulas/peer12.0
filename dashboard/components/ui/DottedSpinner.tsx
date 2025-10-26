@@ -24,7 +24,6 @@ export default function DottedSpinner({
       className={`relative inline-block align-middle ${className}`}
       style={{ width: size, height: size }}
       aria-hidden="true"
-      role="progressbar"
     >
       {items.map((_, i) => {
         const angle = (i / dots) * 360;
