@@ -292,7 +292,7 @@ export default function VenueHeatmap() {
 
   return (
     <div className="w-full">
-      <div className="relative w-full overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+      <div className="relative w-full overflow-hidden rounded-xl bg-white">
         {/* Floorplan image */}
         <Image
           src="/venue-main-floor.png"
@@ -300,8 +300,44 @@ export default function VenueHeatmap() {
           width={1400}
           height={700}
           priority
-          style={{ width: "100%", height: "auto", display: "block" }}
+          style={{
+            width: "100%",
+            height: "auto",
+            display: "block",
+            padding: "10px",
+          }}
         />
+
+        {/* Powered by Chroma badge */}
+        <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-lg  flex items-center gap-2">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="#FF6B6B" opacity="0.8" />
+            <path
+              d="M2 17L12 22L22 17"
+              stroke="#FF6B6B"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <path
+              d="M2 12L12 17L22 12"
+              stroke="#FF6B6B"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+          <span className="text-xs font-medium text-gray-700">
+            Powered by{" "}
+            <span className="font-semibold text-gray-900">Chroma</span>
+          </span>
+        </div>
 
         {/* Overlay markers */}
         <div className="absolute inset-0">
@@ -373,7 +409,7 @@ export default function VenueHeatmap() {
             Critical
           </span>
         </div>
-        <div className="flex items-center gap-2 text-gray-500">
+        <div className="flex items-center gap-2 text-gray-500 mt-4">
           <div className="flex items-center gap-1">
             <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></div>
             <span>Live</span>

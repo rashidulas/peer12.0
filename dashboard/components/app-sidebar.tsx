@@ -92,9 +92,9 @@ export function AppSidebar({
       <SidebarContent>
         <NavMain items={navItems} />
       </SidebarContent>
-      <SidebarFooter>
+      {/* <SidebarFooter>
         <NavUser user={data.user} />
-      </SidebarFooter>
+      </SidebarFooter> */}
     </Sidebar>
   );
 }

@@ -35,7 +35,7 @@ export default function SimpleMeshNetwork() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Network Mesh Visualization</h2>
+          <h2 className="text-2xl font-bold">Network Mesh</h2>
           <p className="text-gray-600 mt-1">
             Live P2P mesh: {totalDevices} device{totalDevices !== 1 ? "s" : ""}{" "}
             connected
@@ -133,7 +133,7 @@ export default function SimpleMeshNetwork() {
             ))}
 
             {/* Empty State */}
-            {peerArray.length === 0 && (
+            {/* {peerArray.length === 0 && (
               <div className="col-span-full p-8 text-center border-2 border-dashed rounded-lg bg-gray-50">
                 <Users className="w-12 h-12 text-gray-400 mx-auto mb-3" />
                 <p className="text-gray-600 font-medium mb-1">
@@ -144,7 +144,7 @@ export default function SimpleMeshNetwork() {
                   networking in action
                 </p>
               </div>
-            )}
+            )} */}
           </div>
         </CardContent>
       </Card>
@@ -184,7 +184,7 @@ export default function SimpleMeshNetwork() {
       </div>
 
       {/* Announcements */}
-      <Card>
+      <Card className="mb-10">
         <CardHeader>
           <CardTitle className="text-lg">Mesh Announcements</CardTitle>
         </CardHeader>
@@ -275,7 +275,7 @@ export default function SimpleMeshNetwork() {
       </Card>
 
       {/* Technical Info */}
-      <Card>
+      {/* <Card>
         <CardHeader>
           <CardTitle className="text-lg">Technical Details</CardTitle>
         </CardHeader>
@@ -309,7 +309,7 @@ export default function SimpleMeshNetwork() {
             </p>
           </div>
         </CardContent>
-      </Card>
+      </Card> */}
     </div>
   );
 }
