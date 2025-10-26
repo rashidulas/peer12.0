@@ -25,12 +25,12 @@ type ZoneMarker = ZoneHealth & {
 const ROOM_COORDINATES: Record<string, { xPct: number; yPct: number }> = {
   Registration: { xPct: 85, yPct: 75 }, // Entrance/Check-In area
   "Main Hacking Space": { xPct: 25, yPct: 35 }, // Large central area
-  Stage: { xPct: 20, yPct: 60 }, // Stage area
-  "Mentor Tables": { xPct: 45, yPct: 70 }, // Mentor area
-  "Food & Swag Distribution": { xPct: 35, yPct: 65 }, // Food area
-  "Info Desk & Bag Check": { xPct: 75, yPct: 85 }, // Info desk
-  "Sleeping Area": { xPct: 70, yPct: 25 }, // Sleeping area
-  "Robotics Space": { xPct: 60, yPct: 20 }, // Robotics area
+  Stage: { xPct: 10, yPct: 30 }, // Stage area
+  "Mentor Tables": { xPct: 63, yPct: 55 }, // Mentor area
+  "Food & Swag Distribution": { xPct: 50, yPct: 40 }, // Food area
+  Rooms: { xPct: 50, yPct: 25 }, // Info desk
+  "Sleeping Area": { xPct: 90, yPct: 55 }, // Sleeping area
+  "Robotics Space": { xPct: 67, yPct: 37 }, // Robotics area
   "Workshop Room 1": { xPct: 80, yPct: 15 }, // Doe Workshop Room
   "Workshop Room 2": { xPct: 85, yPct: 15 }, // Bancroft Workshop Room
   Theater: { xPct: 90, yPct: 90 }, // Theater area
@@ -317,16 +317,18 @@ export default function VenueHeatmap() {
               onClick={() => setSelectedZone(m)}
               title={`Click for details: ${m.label || m.id}`}
             >
-              <div
-                className="rounded-full bg-white/40 backdrop-blur-sm"
-                style={{
-                  boxShadow: `0 0 0 6px ${m.color}1A, 0 0 24px ${m.color}66`,
-                }}
-              >
-                <WifiIcon bars={m.bars} color={m.color} />
-              </div>
-              <div className="mt-1 text-center text-[11px] font-medium text-gray-700">
-                {m.label || "Zone"}
+              <div className="flex flex-col items-center">
+                <div
+                  className="rounded-full bg-white/80 p-2"
+                  style={{
+                    boxShadow: `0 0 0 3px ${m.color}40, 0 0 12px ${m.color}40`,
+                  }}
+                >
+                  <WifiIcon bars={m.bars} color={m.color} />
+                </div>
+                <div className="mt-1 text-center text-[11px] font-medium text-gray-700 bg-white/80 px-1 rounded">
+                  {m.label || "Zone"}
+                </div>
               </div>
             </div>
           ))}
