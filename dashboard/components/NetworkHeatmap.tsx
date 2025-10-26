@@ -23,7 +23,9 @@ export default function NetworkHeatmap() {
   const fetchHeatmap = async () => {
     try {
       const res = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/heatmap/zones?limit=${limit}`
+        `${
+          process.env.NEXT_PUBLIC_API_URL
+        }/heatmap/zones?limit=${limit}&_=${Date.now()}`
       );
 
       if (res.data.zones) {
